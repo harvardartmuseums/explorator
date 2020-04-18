@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8" />
+    <title>{{title}} | Harvard Art Museums</title>
+		<style type="text/css">
+			body {background: #ffffff;color: #000000;font-family: verdana;font-size: 0.8em;margin: 0px;padding: 0px;}
+			header {background: #e7e7e7; padding: 10px;}
+
+			#content {margin:10px;}
+			#loader {display: none;}
+
+			.person-block {border-bottom:1px solid #c0c0c0;}
+			.person-block .displayname {font-weight: bold;}
+
+			footer {background: #999999; padding: 10px;color: #333333;bottom:0;height:16px;z-index: 50000;}
+			footer .info-panel {}
+			footer #tree-button, #reset-button, #help-button, #pack-button, #sets-button {cursor: pointer;}
+			footer .interest-button {cursor: pointer;}
+			footer .interest-button:hover, .button-on {background: white;}
+			footer .interest-color {border-radius: 50%;display: inline-block;margin-left:5px;margin-right:5px; width:10px;height:10px;}
+			footer .color-swatch {float:left;width:30px;height:30px;margin-right: 5px;}	
+			footer #museums-message {display: none; height:100%;width: 100%; left:0px;position: absolute;bottom: 36px;background: #ffffff;z-index: 1000000;}
+			footer #help-message, #sets-message {display: none;width:25%;bottom:36px;left:0px;position: absolute;padding:20px;background: #c0c0c0;z-index:100000;}
+			footer .toggle-button {cursor: pointer;float:right;vertical-align:middle;margin-left:10px;}
+			footer .on {opacity:1.0;}
+			footer .off {opacity:0.6;}
+			footer #counter {float: right;}		
+		</style>
+  </head>
+  <body>
+    {{{body}}}
+  </body>
+</html>

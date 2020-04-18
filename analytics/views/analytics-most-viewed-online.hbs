@@ -1,0 +1,109 @@
+		<header>
+			<h1>What's popular online?</h1>
+		</header>
+		<section id="top-lists"></section>
+		<footer>
+			<div class="info-panel">Calculated using data gathered from Google Analytics</div>
+		</footer>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script id="top-five-template" type="text/template">
+			<div class="top-five hide grouping highlight-all-\{{index}}" id="\{{key_as_string}}">
+				<div class="group-header">
+					<h1 onclick="$('#\{{key_as_string}}').toggleClass('hide')" title="Click to see more objects">\{{key_as_string}}</h1>
+				</div>
+				<ul>
+					\{{#by_object.buckets}}
+						\{{#details}}
+							<li class="list-item" data-object-id="\{{details.objectid}}"><a href="\{{details.url}}"><img src="\{{details.primaryimageurl}}?width=100&height=100" title="\{{totals.value}} pageviews"></a></li>
+						\{{/details}}
+						\{{^details}}
+						\{{/details}}
+					\{{/by_object.buckets}}
+				</ul>
+				<div style="clear:both;"></div>
+			</div>
+		</script>			
+		<script id="stats-info-template" type="text/template">	
+			{{#statsdates}} {{start}} to {{end}} {{/statsdates}}
+		</script>
+		<script>
+			var template = $('#top-five-template').html();
+
+			$(function() {fillTopFive();});
+
+			function fillTopFive() {
+				var agg = {
+					"by_year": {
+						"date_histogram": {
+							"field": "date",
+							"interval": "year",
+							"format": "yyy",
+							"min_doc_count": 0,
+							"extended_bounds": {
+								"min": "2009",
+								"max": "2018"
+							},
+							"order": {"_key": "desc"}
+						},
+						"aggs": {
+							"by_object": {
+								"terms": {
+									"field": "objectid",
+									"size": 20, 
+									"order": {"totals": "desc"}
+								},
+								"aggs": {
+									"totals": {
+										"sum": {
+											"field": "activitycount"
+										}
+									}
+								}
+							}
+						}
+					}
+				};
+				
+				var baseURL = "/data/activity";
+				var urlParameters = "?&size=0&type=pageviews&aggregation=" + JSON.stringify(agg);
+				var exclude = [128919, 128675, 129840, 142585, 262850, 128570, 140784, 295881];
+
+				$.getJSON(baseURL + urlParameters, function(data) {
+					var years = data.aggregations.by_year.buckets;
+
+					years.forEach(function(d) {
+						var requests = [];
+						var results = [];
+
+						d.index = new Date().getFullYear() - d.key_as_string;
+						d.by_object.buckets.forEach(function(o, i) {
+
+							if (exclude.indexOf(o.key) < 0) {
+								requests.push(
+									$.getJSON('/data/object/' + o.key).done(function(details){o.details = details;})
+								);
+							}
+						})
+
+						$.when.apply($, requests).done(function() {
+							renderYear(d);
+						});
+					})
+				});
+			}
+
+			function renderYear(data) {
+				var info = Mustache.to_html(template, data);
+				$("#top-lists").append(info);
+
+				$(".list-item").mouseenter(function() {
+					var objectID = $(this).data("object-id");
+					$("li:not([data-object-id='" + objectID + "']) a img").attr("style", "opacity:0.3")
+				}).mouseleave(function() {
+					var objectID = $(this).data("object-id");
+					$("li:not([data-object-id='" + objectID + "']) a img").attr("style", "opacity:1.0")
+				});				
+			}
+		</script>
