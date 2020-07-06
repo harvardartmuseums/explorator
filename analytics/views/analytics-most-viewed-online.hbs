@@ -1,109 +1,343 @@
-		<header class="jumbotron">
-			<h1>What's popular online?</h1>
-		</header>
-		<section id="top-lists"></section>
-		<footer>
-			<div class="info-panel">Calculated using data gathered from Google Analytics</div>
-		</footer>
-
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-		<script id="top-five-template" type="text/template">
-			<div class="top-five hide grouping highlight-all-\{{index}}" id="\{{key_as_string}}">
-				<div class="group-header">
-					<h1 onclick="$('#\{{key_as_string}}').toggleClass('hide')" title="Click to see more objects">\{{key_as_string}}</h1>
+			<header class="jumbotron">
+				<h1>What's popular online?</h1>
+			</header>
+			<section id="top-lists"></section>
+			<section id="object-details-panel" class="modal fade right" tabindex="-1" role="dialog">
+				<div class="modal-dialog modal-full-height modal-right">
+					<div class="modal-content">
+						<div class="modal-body" id="object-details-body">Object Info</div>
+					</div>
 				</div>
-				<ul>
-					\{{#by_object.buckets}}
-						\{{#details}}
-							<li class="list-item" data-object-id="\{{details.objectid}}"><a href="\{{details.url}}"><img src="\{{details.primaryimageurl}}?width=100&height=100" title="\{{totals.value}} pageviews"></a></li>
-						\{{/details}}
-						\{{^details}}
-						\{{/details}}
-					\{{/by_object.buckets}}
-				</ul>
-				<div style="clear:both;"></div>
-			</div>
-		</script>			
-		<script id="stats-info-template" type="text/template">	
-			{{#statsdates}} {{start}} to {{end}} {{/statsdates}}
-		</script>
-		<script>
-			var template = $('#top-five-template').html();
+			</section>
+			<footer>
+				<div class="info-panel">Calculated using data gathered from Google Analytics</div>
+			</footer>
 
-			$(function() {fillTopFive();});
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+			<script id="top-five-template" type="text/template">
+				<div class="top-five hide grouping highlight-all-\{{index}}" id="\{{key_as_string}}">
+					<div class="group-header">
+						<h1>\{{key_as_string}}</h1>
+					</div>
+					<ul>
+						\{{#by_object.buckets}}
+							\{{#details}}
+							\{{/details}}
+								{{!-- <li class="list-item" data-object-id="\{{details.objectid}}"><a href="\{{details.url}}"><img src="\{{details.primaryimageurl}}?width=100&height=100" title="\{{totals.value}} pageviews"></a></li> --}}
+								<li class="list-item" data-object-id="\{{details.objectid}}"><img src="\{{details.primaryimageurl}}?width=100&height=100" title="\{{totals.value}} pageviews"></li>
+							\{{^details}}
+							\{{/details}}
+						\{{/by_object.buckets}}
+					</ul>
+					<div style="clear:both;"></div>
+				</div>
+			</script>			
+			<script id="object-details-template" type="text/template">	
+				\{{#primaryimageurl}}
+					<div>
+						<img src="\{{images.0.iiifbaseuri}}/full/100,/0/default.jpg">
+					</div>
+				\{{/primaryimageurl}}
+				<p>Title: \{{title}}</p>
+				\{{#people}}
+					<p>\{{role}}: \{{prefix}} \{{displayname}}</p>
+				\{{/people}}
+				<p><a href="\{{url}}" target="_blank">View the object page</a></p>
+				<hr/>
+				<p>Activity</p>
+				<p>The activity data is from 2009 to present.</p>
+				<div>
+					Total pageviews: \{{totalpageviews}}
+				</div>
+				<p class="graph"></p>
+				<div class="graph-day-data">
+					<div><div class="metric-label">Period of activity:</div><span class="metric-period"></span></div>
+					<div><div class="metric-label">Total page views:</div><span class="metric-pageviews">0</span></div>
+					<div><div class="metric-label">Unique page views:</div><span class="metric-uniquepageviews">0</span></div>
+					<div><div class="metric-label">Physical moves:</div><span class="metric-moves">0</span></div>
+					<div><div class="metric-label">Record edits:</div><span class="metric-edits">0</span></div>
+					<div><div class="metric-label">Study center views:</div><span class="metric-studycenterviews">0</span></div>
+					<div><div class="metric-label">Conservation:</div><span class="metric-conservation">0</span></div>
+				</div>			
+			</script>
+			<script id="stats-info-template" type="text/template">	
+				{{#statsdates}} {{start}} to {{end}} {{/statsdates}}
+			</script>
+			<script>
+				var template = $('#top-five-template').html();
 
-			function fillTopFive() {
-				var agg = {
-					"by_year": {
-						"date_histogram": {
-							"field": "date",
-							"interval": "year",
-							"format": "yyy",
-							"min_doc_count": 0,
-							"extended_bounds": {
-								"min": "2009",
-								"max": "2020"
-							},
-							"order": {"_key": "desc"}
-						},
-						"aggs": {
-							"by_object": {
-								"terms": {
-									"field": "objectid",
-									"size": 20, 
-									"order": {"totals": "desc"}
+				$(function() {fillTopFive();});
+
+				function fillTopFive() {
+					var agg = {
+						"by_year": {
+							"date_histogram": {
+								"field": "date",
+								"interval": "year",
+								"format": "yyy",
+								"min_doc_count": 0,
+								"extended_bounds": {
+									"min": "2009",
+									"max": "2020"
 								},
-								"aggs": {
-									"totals": {
-										"sum": {
-											"field": "activitycount"
+								"order": {"_key": "desc"}
+							},
+							"aggs": {
+								"by_object": {
+									"terms": {
+										"field": "objectid",
+										"size": 20, 
+										"order": {"totals": "desc"}
+									},
+									"aggs": {
+										"totals": {
+											"sum": {
+												"field": "activitycount"
+											}
 										}
 									}
 								}
 							}
 						}
-					}
-				};
-				
-				var baseURL = "/data/activity";
-				var urlParameters = "?&size=0&type=pageviews&aggregation=" + JSON.stringify(agg);
-				var exclude = [128919, 128675, 129840, 142585, 262850, 128570, 140784, 295881];
+					};
+					
+					var baseURL = "/data/activity";
+					var urlParameters = "?&size=0&type=pageviews&aggregation=" + JSON.stringify(agg);
+					var exclude = [];
 
-				$.getJSON(baseURL + urlParameters, function(data) {
-					var years = data.aggregations.by_year.buckets;
+					$.getJSON(baseURL + urlParameters, function(data) {
+						var years = data.aggregations.by_year.buckets;
 
-					years.forEach(function(d) {
-						var requests = [];
-						var results = [];
+						years.forEach(function(d, i) {
+							var requests = [];
+							var results = [];
 
-						d.index = new Date().getFullYear() - d.key_as_string;
-						d.by_object.buckets.forEach(function(o, i) {
+							d.index = new Date().getFullYear() - d.key_as_string;
+							d.by_object.buckets.forEach(function(o, i) {
 
-							if (exclude.indexOf(o.key) < 0) {
-								requests.push(
-									$.getJSON('/data/object/' + o.key).done(function(details){o.details = details;})
-								);
-							}
-						})
+								if (exclude.indexOf(o.key) < 0) {
+									requests.push(
+										$.getJSON('/data/object/' + o.key).done(function(details){o.details = details;})
+									);
+								}
+							})
 
-						$.when.apply($, requests).done(function() {
-							renderYear(d);
+							$.when.apply($, requests).done(function() {
+								renderYear(d);
+
+								if (i === years.length-1) {
+									$(".list-item").click(function() {
+										$("li img").attr("style", "opacity:1.0");
+
+										var objectID = $(this).data("object-id");
+										$("li:not([data-object-id='" + objectID + "']) img").attr("style", "opacity:0.3");
+
+										renderObjectDetails(objectID);
+										
+									});										
+								}
+							});
 						});
-					})
-				});
-			}
+					});
+				}
 
-			function renderYear(data) {
-				var info = Mustache.to_html(template, data);
-				$("#top-lists").append(info);
+				function renderYear(data) {
+					var info = Mustache.to_html(template, data);
+					$("#top-lists").append(info);
+				}
 
-				$(".list-item").mouseenter(function() {
-					var objectID = $(this).data("object-id");
-					$("li:not([data-object-id='" + objectID + "']) a img").attr("style", "opacity:0.3")
-				}).mouseleave(function() {
-					var objectID = $(this).data("object-id");
-					$("li:not([data-object-id='" + objectID + "']) a img").attr("style", "opacity:1.0")
-				});				
-			}
-		</script>
+				function renderObjectDetails(objectId) {
+					var panel = $("#object-details-panel");
+					var body = $("#object-details-body");
+
+
+					$.getJSON(`/data/object/${objectId}`, data => {
+						var objectDetailsTemplate = $('#object-details-template').html();
+						var content = Mustache.to_html(objectDetailsTemplate, data);
+
+						body.html(content);
+
+						makeActivityGraph(objectId);
+
+						panel.modal();
+					});
+				}
+
+				function makeActivityGraph(objectId) {
+					//See http://bl.ocks.org/mbostock/3884955
+					var margin = {top: 5, right: 5, bottom: 20, left: 30},
+						width = 350 - margin.left - margin.right,
+						height = 150 - margin.top - margin.bottom;
+
+					var parseDate = d3.timeParse("%Y-%m");
+
+					var x = d3.scaleTime().range([0, width]);
+					var y = d3.scaleLinear().range([height, 0]);
+					var myScale;
+
+					var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+					var xAxis = d3.axisBottom()
+						.scale(x)
+						.ticks(5);
+
+					var yAxis = d3.axisLeft()
+						.scale(y)
+						.ticks(3);
+
+					var line = d3.line()
+						.x(function(d) { return x(d.activitydate); })
+						.y(function(d) { return y(d.totalcount); });
+
+					var g = $(".graph");
+					var graphData = $(".graph-day-data");
+
+					var agg = {
+						"activities": {
+							"terms": { 
+								"field": "activitytype",
+								"size": 0
+							},
+							"aggs": {
+								"by_month": {
+									"date_histogram": {
+										"field": "date",
+										"interval": "month",
+										"format": "yyy-MM",
+										"min_doc_count": 0,
+										"extended_bounds": {
+											"min": "2009-01",
+											"max": "2020-12"
+										}
+									},
+									"aggs": {
+										"totals": {
+											"sum": {
+												"field": "activitycount"
+											}
+										}
+									}
+								}
+							}
+						}
+					};
+					var baseURL = '/data/activity'
+					var urlParameters = `?size=0&object=${objectId}&aggregation=${JSON.stringify(agg)}`;
+
+					var graphWidth = width + margin.left + margin.right;
+					var graphHeight = height + margin.top + margin.bottom;
+					var svg = d3.select(g[0])
+						.append("svg")
+							.attr("width", graphWidth)
+							.attr("height", graphHeight)
+						.append("g")
+							.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+					d3.json(baseURL + urlParameters).then(function(data) {
+						data = data.aggregations.activities;
+
+						color.domain(d3.keys(data.buckets));
+
+						data.buckets.forEach(function(d) {
+							d.by_month.buckets.forEach(function(d) {
+								d.activitydate = parseDate(d.key_as_string);
+							});
+						});
+
+						var totals = color.domain().map(function(name) {
+							return {
+								name: data.buckets[name].key,
+								values: data.buckets[name].by_month.buckets.map(function(d) {
+									return {activitydate: d.activitydate, totalcount: +d.totals.value, key_as_string: d.key_as_string};
+								})
+							};
+						});
+
+						myScale = d3.scaleLinear()
+									.clamp(true)
+									.domain([0, x.range()[1]])
+									.rangeRound([0, totals[0].values.length]);
+
+						// Scale the range of the data
+						x.domain(d3.extent(data.buckets[0].by_month.buckets, function(d) { return d.activitydate; }));
+						y.domain([
+							d3.min(totals, function(c) {return d3.min(c.values, function(v) {return v.totalcount;})}),
+							d3.max(totals, function(c) {return d3.max(c.values, function(v) {return v.totalcount;})})
+						]);
+
+						svg.append("g")         // Add the X Axis
+							.attr("class", "x axis")
+							.attr("transform", "translate(0," + height + ")")
+							.call(xAxis);
+
+						svg.append("g")         // Add the Y Axis
+							.attr("class", "y axis")
+							.call(yAxis);
+
+						var total = svg.selectAll(".total")
+								.data(totals)
+							.enter().append("g")
+								.attr("class", "total");
+
+						total.append("path")
+							.attr("class", "line")
+							.attr("d", function(d) {return line(d.values); })
+							.style("stroke", function(d) {return color(d.name); })
+							.append("title")
+							.text(function(d) {return d.name;});
+
+						//Thanks to the author of the following article:
+						//		http://bl.ocks.org/d3noob/a0cbcddc6bf0eb9569fe
+
+						var dataGrid = d3.select(graphData[0]);
+
+						var focus = svg.append("g") 
+							.style("display", "none");
+
+						// append the y line
+						focus.append("line")
+							.attr("class", "x")
+							.style("stroke", "grey")
+							.style("stroke-dasharray", "3,3")
+							.style("opacity", 1)
+							.style("shape-rendering", "crispEdges");			
+
+						focus.append("text")
+							.attr("class", "y1")
+							.style("opacity", 1)
+							.attr("dx", 8)
+							.attr("dy", "1em");
+
+						svg.append("rect")
+							.attr("width", width)
+							.attr("height", height)
+							.style("fill", "none")
+							.style("pointer-events", "all")
+							.on("mouseover", function() { focus.style("display", null); })
+							.on("mouseout", function() { focus.style("display", "none"); })
+							.on("mousemove", function() {
+								focus.select(".x")
+									.attr("transform",
+											"translate(" + d3.mouse(this)[0] + "," + (0) + ")")
+									.attr("y2", graphHeight-25 );
+
+								var itemNumber = myScale(d3.mouse(this)[0]);
+								var t = totals[0].values[itemNumber].key_as_string;
+								dataGrid.select("span.metric-period")
+									.text(t);
+								
+								totals.forEach(function(d) {
+									dataGrid.select("span.metric-" + d.name)
+										.text(d.values[itemNumber].totalcount);
+								});
+
+								// focus.select("text.y1")
+							//           .attr("transform",
+							//                 "translate(" + d3.mouse(this)[0] + ",0)")
+							//           .text(t);								
+							});					        			    	
+					});			
+				}
+
+			</script>

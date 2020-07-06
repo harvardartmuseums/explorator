@@ -7,8 +7,7 @@
 			.grouping {padding: 10px;}
 			.top-five ul {list-style-type: none;margin: 0px 0px 10px 0px;padding: 0px;width: 80%;float:left;white-space: nowrap;}
 			.top-five ul li {width: 105px;display: inline-block;text-align: center;vertical-align: middle;padding-bottom: 10px;}
-			.top-five .group-header {width:100px;float: left;cursor: pointer;}
-			.top-five .group-header:hover {text-decoration: underline;}
+			.top-five .group-header {width:100px;float: left;}
 			.hide {overflow: hidden;}
 			.highlight-all-0 {background: #ffffff;}
 			.highlight-all-1 {background: #eeeeee;}
@@ -25,6 +24,29 @@
 			.highlight-all-12 {background: #333333;} 
 			.highlight-all-13 {background: #222222;} 
 			.highlight-all-14 {background: #111111;} 
+
+			/*Activity graph*/
+			.graph {
+				font-size: 0.8em;
+			}
+			path {
+				stroke-width: 1;
+				fill: none;
+			}
+			.axis path, .axis line {
+				fill: none;
+				stroke: grey;
+				stroke-width: 1;
+				shape-rendering: crispEdges;
+			}			
+			.graph-day-data {
+				margin-left: 0px;
+			}
+			.metric-label {
+				width: 150px; 
+				display: inline-block;
+			}
+
 			footer {background: #999999; padding: 10px;}
 		</style>
 		<!-- Font Awesome -->
@@ -34,7 +56,9 @@
 		<!-- Bootstrap core CSS -->
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
 		<!-- Material Design Bootstrap -->
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.16.0/css/mdb.min.css" rel="stylesheet">		
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.16.0/css/mdb.min.css" rel="stylesheet">	
+		<script src="https://d3js.org/d3.v5.min.js"></script>
+	
   </head>
   <body>
     {{{body}}}
