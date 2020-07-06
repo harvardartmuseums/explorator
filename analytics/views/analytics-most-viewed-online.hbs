@@ -118,7 +118,12 @@
 
 								if (exclude.indexOf(o.key) < 0) {
 									requests.push(
-										$.getJSON('/data/object/' + o.key).done(function(details){o.details = details;})
+										$.getJSON('/data/object/' + o.key).done(function(details){
+											o.details = details;
+											if (details.primaryimageurl === null) {
+												o.details.primaryimageurl = '/images/Image-Unavailable-100x100.jpg';
+											}
+										})
 									);
 								}
 							})
