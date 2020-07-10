@@ -24,7 +24,6 @@
 						\{{#by_object.buckets}}
 							\{{#details}}
 							\{{/details}}
-								{{!-- <li class="list-item" data-object-id="\{{details.objectid}}"><a href="\{{details.url}}"><img src="\{{details.primaryimageurl}}?width=100&height=100" title="\{{totals.value}} pageviews"></a></li> --}}
 								<li class="list-item" data-object-id="\{{details.objectid}}"><img src="\{{details.primaryimageurl}}?width=100&height=100" title="\{{totals.value}} pageviews"></li>
 							\{{^details}}
 							\{{/details}}
@@ -50,7 +49,7 @@
 				<div>
 					Total pageviews: \{{totalpageviews}}
 				</div>
-				<p class="graph"></p>
+				<div class="graph"></div>
 				<div class="graph-day-data">
 					<div><div class="metric-label">Period of activity:</div><span class="metric-period"></span></div>
 					<div><div class="metric-label">Total page views:</div><span class="metric-pageviews">0</span></div>
@@ -202,7 +201,7 @@
 						"activities": {
 							"terms": { 
 								"field": "activitytype",
-								"size": 0
+								"size": 10
 							},
 							"aggs": {
 								"by_month": {
