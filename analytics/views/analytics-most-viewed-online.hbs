@@ -13,8 +13,6 @@
 				<div class="info-panel">Calculated using data gathered from Google Analytics</div>
 			</footer>
 
-			<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
-			<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 			<script id="top-five-template" type="text/template">
 				<div class="top-five hide grouping highlight-all-\{{index}}" id="\{{key_as_string}}">
 					<div class="group-header">
@@ -64,9 +62,14 @@
 				{{#statsdates}} {{start}} to {{end}} {{/statsdates}}
 			</script>
 			<script>
-				var template = $('#top-five-template').html();
+				var template;
 
-				$(function() {fillTopFive();});
+				$(function() {
+					
+					template = $('#top-five-template').html();
+					fillTopFive();}
+					
+				);
 
 				function fillTopFive() {
 					var agg = {

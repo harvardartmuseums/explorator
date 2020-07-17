@@ -3,66 +3,65 @@
   <head>
 	<meta charset="utf-8" />
     <title>{{title}} | Harvard Art Museums</title>
-		<style type="text/css">
-			.grouping {padding: 10px;}
-			.top-five ul {list-style-type: none;margin: 0px 0px 10px 0px;padding: 0px;width: 80%;float:left;white-space: nowrap;}
-			.top-five ul li {width: 105px;display: inline-block;text-align: center;vertical-align: middle;padding-bottom: 10px;}
-			.top-five .group-header {width:100px;float: left;}
-			.hide {overflow: hidden;}
-			.highlight-all-0 {background: #ffffff;}
-			.highlight-all-1 {background: #eeeeee;}
-			.highlight-all-2 {background: #dddddd;}
-			.highlight-all-3 {background: #cccccc;}
-			.highlight-all-4 {background: #bbbbbb;}
-			.highlight-all-5 {background: #aaaaaa;}
-			.highlight-all-6 {background: #999999;}
-			.highlight-all-7 {background: #888888;}
-			.highlight-all-8 {background: #777777;}
-			.highlight-all-9 {background: #666666;}
-			.highlight-all-10 {background: #555555;}
-			.highlight-all-11 {background: #444444;}
-			.highlight-all-12 {background: #333333;} 
-			.highlight-all-13 {background: #222222;} 
-			.highlight-all-14 {background: #111111;} 
+	<style type="text/css">
+		.grouping {padding: 10px;}
+		.top-five ul {list-style-type: none;margin: 0px 0px 10px 0px;padding: 0px;width: 80%;float:left;white-space: nowrap;}
+		.top-five ul li {width: 105px;display: inline-block;text-align: center;vertical-align: middle;padding-bottom: 10px;}
+		.top-five .group-header {width:100px;float: left;}
+		.hide {overflow: hidden;}
+		.highlight-all-0 {background: #ffffff;}
+		.highlight-all-1 {background: #eeeeee;}
+		.highlight-all-2 {background: #dddddd;}
+		.highlight-all-3 {background: #cccccc;}
+		.highlight-all-4 {background: #bbbbbb;}
+		.highlight-all-5 {background: #aaaaaa;}
+		.highlight-all-6 {background: #999999;}
+		.highlight-all-7 {background: #888888;}
+		.highlight-all-8 {background: #777777;}
+		.highlight-all-9 {background: #666666;}
+		.highlight-all-10 {background: #555555;}
+		.highlight-all-11 {background: #444444;}
+		.highlight-all-12 {background: #333333;} 
+		.highlight-all-13 {background: #222222;} 
+		.highlight-all-14 {background: #111111;} 
 
-			/*Activity graph*/
-			.graph {
-				font-size: 0.8em;
-			}
-			path {
-				stroke-width: 1;
-				fill: none;
-			}
-			.axis path, .axis line {
-				fill: none;
-				stroke: grey;
-				stroke-width: 1;
-				shape-rendering: crispEdges;
-			}			
-			.graph-day-data {
-				margin-left: 0px;
-			}
-			.metric-label {
-				width: 150px; 
-				display: inline-block;
-			}
+		/*Activity graph*/
+		.graph {
+			font-size: 0.8em;
+		}
+		path {
+			stroke-width: 1;
+			fill: none;
+		}
+		.axis path, .axis line {
+			fill: none;
+			stroke: grey;
+			stroke-width: 1;
+			shape-rendering: crispEdges;
+		}			
+		.graph-day-data {
+			margin-left: 0px;
+		}
+		.metric-label {
+			width: 150px; 
+			display: inline-block;
+		}
 
-			footer {background: #999999; padding: 10px;}
-		</style>
-		<!-- Font Awesome -->
-		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
-		<!-- Google Fonts -->
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
-		<!-- Bootstrap core CSS -->
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
-		<!-- Material Design Bootstrap -->
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.16.0/css/mdb.min.css" rel="stylesheet">	
-		<script src="https://d3js.org/d3.v5.min.js"></script>
-	
-  </head>
-  <body>
-    {{{body}}}
+		footer {background: #999999; padding: 10px;}
+	</style>
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+	<!-- Google Fonts -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+	<!-- Bootstrap core CSS -->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Material Design Bootstrap -->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.16.0/css/mdb.min.css" rel="stylesheet">	
 
+	<!-- D3js -->
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+    <!-- Mustache -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
     <!-- JQuery -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <!-- Bootstrap tooltips -->
@@ -71,5 +70,9 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <!-- MDB core JavaScript -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.16.0/js/mdb.min.js"></script>   	
+	
+  </head>
+  <body>
+    {{{body}}}
   </body>
 </html>
