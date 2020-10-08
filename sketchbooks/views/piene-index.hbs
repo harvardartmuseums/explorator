@@ -47,8 +47,10 @@
         height: 10px;
     }	
 
-    #page-image {
+    .page-details {
+        background-color: #ffffff;
         position: absolute;
+        width:250px;
         top: 0px;
         left: 0px;
     }	
@@ -61,7 +63,10 @@
         <img src="/images/ajax-loader.gif">
     </div>
     <div class="sketchbooks"></div>
-    <img id="page-image">
+    <div class="page-details">
+        <img id="page-image">
+        <p id="page-title"></p>
+    </div>
 </div>
 
 
@@ -75,9 +80,10 @@
             \{{dated}}
         </div>
         \{{#pages}}
-            <div class="color-panel" data-image-url="\{{imageURLMedium primaryimageurl}}">						
+            <div class="color-panel" data-image-url="\{{imageURLMedium primaryimageurl}}" data-title="\{{title}}">						
                 \{{#colors}}
-                    <div class="color-swatch" style="background:\{{color}};width:\{{colorPercentToWidth percent}}px" title="\{{color}}, \{{hue}}, \{{percent}}"></div>
+                    {{!-- <div class="color-swatch" style="background:\{{color}};width:\{{colorPercentToWidth percent}}px" title="\{{color}}, \{{hue}}, \{{percent}}"></div> --}}
+                    <div class="color-swatch" style="background:\{{color}};width:\{{colorPercentToWidth percent}}px" title=""></div>
                 \{{/colors}}
             </div>
         \{{/pages}}
@@ -109,7 +115,7 @@
         });
 
         Handlebars.registerHelper('colorPercentToWidth', function(amount) {
-            return Math.ceil(amount * 150);
+            return Math.ceil(amount * 200);
         });
 
         $('#sketchbook-set').hide();
@@ -132,7 +138,7 @@
         const data = await fetch(urlSketchbook).then(response => response.json());
         let sketchbook = data.records[0];
 
-        urlPages = `/data/object?objectnumber=${value}.*&fields=primaryimageurl,objectnumber,date,colors&size=100&sort=id&sortorder=asc`; 
+        urlPages = `/data/object?objectnumber=${value}.*&fields=primaryimageurl,objectnumber,date,title,colors&size=100&sort=id&sortorder=asc`; 
         let results = await fetch(urlPages).then(response => response.json());
         results.records.forEach(r => {
             let c = _.sortBy(r.colors, ['percent']);
@@ -157,13 +163,18 @@
         $('.sketchbooks').append(info);
 
         $('.color-panel').on('mouseover', event => {
-            $("#page-image").attr('src', $(event.currentTarget).data('image-url'))
+            $(".page-details")
                 .css('top', $(event.currentTarget).offset().top)
-                .css('left', $(event.currentTarget).offset().left + 150);
+                .css('left', $(event.currentTarget).offset().left + 200)
+                .show();
+
+            $("#page-title").html($(event.currentTarget).data('title'));
+            $("#page-image").attr('src', $(event.currentTarget).data('image-url'));
         });     
 
         $('.color-panel').on('mouseout', event => {
             $("#page-image").attr('src', '');
+            $(".page-details").hide();
         });             
     }
 
