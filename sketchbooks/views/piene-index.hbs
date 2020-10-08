@@ -1,0 +1,174 @@
+<style type="text/css">
+    body {
+        background: #ffffff;
+        color: #000000;
+        font-family: "Neutral Regular 3", "NeutralBP", "Neutral BP", Helvetica, Arial, sans-serif;
+        font-size: 0.8em;
+        margin: 10px;
+        padding: 0px;
+    }
+    
+    .sketchbooks {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-gap: 10px;
+        grid-auto-rows: minmax(100px, auto);
+    }
+
+    #sketchbook-set {
+        margin: 0px 0px 0px 0px;
+        padding: 0px;
+    }
+
+    #loader {
+        text-align: center;
+        width: 100%;
+        display: none;
+        z-index: 100000;
+        background: white;
+    }
+    
+    #loader .message {
+        font-size: 1.4em;
+    }
+
+    .color-panel {
+        text-align: left;
+        top: 0px;
+        right: 0px;
+        background: #ffffff;
+        opacity: 0.95;
+        clear: both;
+    }
+
+    .color-panel .color-swatch {
+        float: left;
+        width: 10px;
+        height: 10px;
+    }	
+
+    #page-image {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+    }	
+</style>
+
+
+<div id="content">
+    <div id="loader">
+        <p class="message">Fetching some beautiful sketchbooks just for you...</p>
+        <img src="/images/ajax-loader.gif">
+    </div>
+    <div class="sketchbooks"></div>
+    <img id="page-image">
+</div>
+
+
+
+<!-- // The main view, with image display and information panel -->
+<script id="sketchbook-set-template" type="text/template">
+    <div class="sketchbook" data-object-id="\{{id}}" id="">
+        <div>
+            <a href="\{{url}}" target="_blank">\{{objectnumber}}</a><br/>
+            \{{title}}</br>
+            \{{dated}}
+        </div>
+        \{{#pages}}
+            <div class="color-panel" data-image-url="\{{imageURLMedium primaryimageurl}}">						
+                \{{#colors}}
+                    <div class="color-swatch" style="background:\{{color}};width:\{{colorPercentToWidth percent}}px" title="\{{color}}, \{{hue}}, \{{percent}}"></div>
+                \{{/colors}}
+            </div>
+        \{{/pages}}
+    </div>
+</script>	
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var imageWidth = $("#content").innerWidth();
+        var imageHeight = $("#content").innerHeight();
+        var imageURLParamsL = '?width=50&height=50';
+        var imageURLParamsM = '?height=150';
+
+        Handlebars.registerHelper('imageURL', function(image) {
+            if (image) {
+                return image + imageURLParamsL;
+            } else {
+                return "img/no_image.png";
+            }
+        });
+
+        Handlebars.registerHelper('imageURLMedium', function(image) {
+            if (image) {
+                return image + imageURLParamsM;
+            } else {
+                return "img/no_image_thumb.png";
+            }
+        });
+
+        Handlebars.registerHelper('colorPercentToWidth', function(amount) {
+            return Math.ceil(amount * 150);
+        });
+
+        $('#sketchbook-set').hide();
+        $('#loader').show();
+
+        getObjects("2019.1");
+        getObjects("2019.8");
+        getObjects("2019.11");
+        getObjects("2019.25");
+        
+        $('.sketchbooks').show();
+        $('#loader').hide();
+    });
+
+    // Gets a set of twenty-five sketchbook objects, based on 
+    // the given field/value search, and updates the 
+    // explorer accordingly
+    async function getObjects(value) {
+        let urlSketchbook = `/data/object?objectnumber=${value}&person=28069&size=1`; 
+        const data = await fetch(urlSketchbook).then(response => response.json());
+        let sketchbook = data.records[0];
+
+        urlPages = `/data/object?objectnumber=${value}.*&fields=primaryimageurl,objectnumber,date,colors&size=100&sort=id&sortorder=asc`; 
+        let results = await fetch(urlPages).then(response => response.json());
+        results.records.forEach(r => {
+            let c = _.sortBy(r.colors, ['percent']);
+            r.colors = c;
+        });
+        let pages = results.records;
+
+        while (results.info.next) {
+            results = await fetch(results.info.next).then(response => response.json());
+            results.records.forEach(r => {
+                let c = _.sortBy(r.colors, ['percent']);
+                r.colors = c;
+            });
+            pages = _.concat(pages, results.records);
+        }
+
+        sketchbook.pages = pages;
+
+        var source = $('#sketchbook-set-template').html();
+        var template = Handlebars.compile(source);
+        var info = template(sketchbook);
+        $('.sketchbooks').append(info);
+
+        $('.color-panel').on('mouseover', event => {
+            $("#page-image").attr('src', $(event.currentTarget).data('image-url'))
+                .css('top', $(event.currentTarget).offset().top)
+                .css('left', $(event.currentTarget).offset().left + 150);
+        });     
+
+        $('.color-panel').on('mouseout', event => {
+            $("#page-image").attr('src', '');
+        });             
+    }
+
+    function getrUrlVar(key) {
+        var result = new RegExp(key + "=([^&]*)", "i").exec(window.location.search);
+        return result && unescape(result[1]) || "";
+    }					
+</script>
