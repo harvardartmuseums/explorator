@@ -3,7 +3,7 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Explorator' });
+  res.render('index', { title: 'Explorator | Harvard Art Museums' });
 });
 
 module.exports = router;
