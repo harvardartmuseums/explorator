@@ -1,0 +1,65 @@
+<div class="jumbotron card p-4 m-4">
+    <div class="p-4 m-4">
+        <div>
+            <h1 class="card-title">{{object.images.[0].alttext}}</h1>
+        </div>
+        <div class="d-none" id="hint-0">
+            <hr>
+            <p class="lead">{{object.images.[0].description}}</p>
+        </div>
+        <div class="d-none" id="hint-1">
+            <hr>
+            <p>I'm a <span class="text-lowercase">{{object.worktypes.[0].worktype}}</span> in the division of {{object.division}}.</p>
+        </div>
+        <div class="d-none" id="answer">
+            <img class="img-fluid" src="{{object.images.[0].baseimageurl}}">
+            <p>
+                The title is {{object.title}}. <a href="{{object.url}}">Learn more at the object page</a>.
+            </p>
+        </div>
+        <div class="pt-4"> 
+            <button type="button" class="btn btn-lg btn-primary" id="btn-hint" value=""></button><button type="button" class="btn btn-lg btn-primary" id="btn-show-image" value="">I know what it is! Show me the image.</button>
+        </div>
+    </div>    
+</div>
+<div class="p-4 m-4"></div>    
+
+<footer class="page-footer grey darken-1 font-small p-3 fixed-bottom">
+	<div class="container-responsive text-left">
+			Alt Text Roulette: Another R&amp;D project from the department of Digital Infrastructure and Emerging Technology at <a href="https://hvrd.art">Harvard Art Museums</a>
+	</div>	
+</footer>
+
+<script>
+    let currentHint = 0;
+    let hintButtonText = [
+        `My memory is fuzzy. Give me a hint.`,
+        `I still don't see it. Give me another hint.`,
+        `Ok. I give up. Show me the image.`
+    ];
+
+    function showHint() {
+        $(`#hint-${currentHint}`).removeClass("d-none");
+
+        currentHint +=1;
+        $("#btn-hint").text(hintButtonText[currentHint]);
+        
+        if (currentHint >= hintButtonText.length-1) {
+            $("#btn-show-image").attr("disabled", true);
+            $("#btn-hint").click(showImage);
+        }
+    }    
+
+    function showImage() {
+        $("#answer").removeClass("d-none");
+        $("#btn-show-image").attr("disabled", true);
+        $("#btn-hint").attr("disabled", true);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        $("#btn-hint").text(hintButtonText[0]);
+        $("#btn-hint").click(showHint);
+
+        $("#btn-show-image").click(showImage);
+    });
+</script>

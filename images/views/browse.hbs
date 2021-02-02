@@ -1,0 +1,75 @@
+<header class="jumbotron grey lighten-4">
+	<h1>Image Explorer</h1>
+	<p class="lead">Some clever tag line goes here</p>
+</header>
+
+<div class="container-fluid p-4">
+	<div id="paginator"></div>
+	<div id="loader">
+		<p class="message">Fetching some beautiful images just for you...</p>
+		<img src="/images/ajax-loader.gif">
+	</div>			
+	<div id="images" class="container-fluid p-0"></div>
+</div>
+
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="container-responsive text-left">
+			Made with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>, <a href="https://nodejs.org/en/">Node.js</a>, <a href="https://getbootstrap.com/">Bootstrap</a>, <a href="https://mdbootstrap.com/">Material Design for Bootstrap</a>, <a href="https://d3js.org/">D3</a>
+	</div>
+</footer>
+
+<script id="image-template" type="text/template">
+	<ul class="list-unstyled">
+	\{{#records}}
+		<li class="media my-4">
+			<img class="d-flex mr-3" src="\{{images.[0].iiifbaseuri}}/full/300,/0/default.jpg">
+			<div class="media-body">
+				<p>\{{images.[0].alttext}}</p>
+				<p>\{{images.[0].description}}</p>
+				<p>\{{commentary}}</p>
+				<p>\{{labeltext}}</p>
+			</div>
+		</li>
+	\{{/records}}
+	</ul>
+</script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function() {
+		let source = $('#image-template').html();
+		let template = Handlebars.compile(source);
+		
+		$("#paginator").pagination({
+			dataSource: "/data/object?q=images.alttext:* AND imagepermissionlevel:0&classification=any&sort=id",
+			locator: "records",
+			pageSize: 20,
+			alias: {
+				pageNumber: "page",
+				pageSize: "size"
+			},
+			totalNumberLocator: function(response) {
+				return response.info.totalrecords;
+			},
+			beforePaging: function() {
+				$('#images').html('');
+				$("#loader").show();
+			},
+			callback: function(data, pagination) {
+				let info = template({records: data});
+				$('#images').html(info);
+				$("#loader").hide();
+			}
+		})
+	});
+
+
+	async function getAltText() {
+		let urlAltText = `/data/object?q=images.alttext:* AND imagepermissionlevel:0&classification=Paintings&sort=id`; 
+		let results = await fetch(urlAltText).then(response => response.json());
+
+		var source = $('#image-template').html();
+		var template = Handlebars.compile(source);
+		var info = template(results);
+		$('#images').append(info);
+	}
+</script>
