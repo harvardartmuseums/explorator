@@ -24,12 +24,14 @@
 		<li class="media my-4">
 			<img class="d-flex mr-3" alt="\{{images.[0].alttext}}" src="\{{images.[0].iiifbaseuri}}/full/300,/0/default.jpg">
 			<div class="media-body">
-				<p>\{{images.[0].alttext}}</p>
-				<p>\{{images.[0].description}}</p>
-				<p>\{{commentary}}</p>
-				<p>\{{labeltext}}</p>
+				<p>Alt Text<br/>\{{images.[0].alttext}}</p>
+				<p>Image Description<br/>\{{images.[0].description}}</p>
+				<p>\{{#if commentary}}Object Commentary<br/>\{{commentary}}\{{/if}}</p>
+				<p>\{{#if labeltext}}Recent Wall Label Text<br/>\{{labeltext}}\{{/if}}</p>
+				<p><a href="\{{object.url}}">Read more at the object page</a>
 			</div>
 		</li>
+		<hr>
 	\{{/records}}
 	</ul>
 </script>
