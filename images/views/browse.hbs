@@ -1,9 +1,10 @@
 <header class="jumbotron grey lighten-4">
 	<h1>Image Explorer</h1>
-	<p class="lead">Some clever tag line goes here</p>
+	<p class="lead">Browse alt text, image desriptions, etc</p>
 </header>
 
 <div class="container-fluid p-4">
+	<p id="info" class="body"></p>
 	<div id="paginator"></div>
 	<div id="loader">
 		<p class="message">Fetching some beautiful images just for you...</p>
@@ -18,6 +19,9 @@
 	</div>
 </footer>
 
+<script id="info-template" type="text/template">
+	\{{totalrecords}} images (without copyright issues) have alt text and image descriptions
+</script>
 <script id="image-template" type="text/template">
 	<ul class="list-unstyled">
 	\{{#records}}
@@ -27,7 +31,7 @@
 				<p>Alt Text<br/>\{{images.[0].alttext}}</p>
 				<p>Image Description<br/>\{{images.[0].description}}</p>
 				<p>\{{#if commentary}}Object Commentary<br/>\{{commentary}}\{{/if}}</p>
-				<p>\{{#if labeltext}}Recent Wall Label Text<br/>\{{labeltext}}\{{/if}}</p>
+				<p>\{{#if labeltext}}Most Recent Wall Label Text on File<br/>\{{labeltext}}\{{/if}}</p>
 				<p><a href="\{{url}}">Read more at the object page</a>
 			</div>
 		</li>
@@ -38,8 +42,11 @@
 
 <script>
 	document.addEventListener("DOMContentLoaded", function() {
-		let source = $('#image-template').html();
-		let template = Handlebars.compile(source);
+		let imageSource = $('#image-template').html();
+		let imageTemplate = Handlebars.compile(imageSource);
+		
+		let infoSource = $('#info-template').html();
+		let infoTemplate = Handlebars.compile(infoSource);
 		
 		$("#paginator").pagination({
 			dataSource: "/data/object?q=images.alttext:* AND imagepermissionlevel:0&classification=any&sort=id",
@@ -57,8 +64,14 @@
 				$("#loader").show();
 			},
 			callback: function(data, pagination) {
-				let info = template({records: data});
+				let info;
+				
+				info = infoTemplate({totalrecords: pagination.totalNumber});
+				$('#info').html(info);
+
+				info = imageTemplate({records: data});
 				$('#images').html(info);
+				
 				$("#loader").hide();
 			}
 		})
