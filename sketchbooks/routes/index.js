@@ -11,4 +11,8 @@ router.get('/piene/colors', function(req, res, next) {
   res.render('piene-colors', {layout: 'layout.hbs', title: 'Otto Piene Color | Explorer | Sketchbook Explorer | Explorator | Harvard Art Museums' });
 });
 
+router.get('/piene/images', function(req, res, next) {
+  res.render('piene-images', {layout: 'layout.hbs', title: 'Otto Piene Images | Explorer | Sketchbook Explorer | Explorator | Harvard Art Museums' });
+});
+
 module.exports = router;
