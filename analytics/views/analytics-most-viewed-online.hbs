@@ -73,6 +73,7 @@
 				);
 
 				function fillTopFive() {
+					var maxYear = new Date().getFullYear();
 					var agg = {
 						"by_year": {
 							"date_histogram": {
@@ -82,7 +83,7 @@
 								"min_doc_count": 0,
 								"extended_bounds": {
 									"min": "2009",
-									"max": "2020"
+									"max": maxYear.toString()
 								},
 								"order": {"_key": "desc"}
 							},
