@@ -22,7 +22,7 @@
 				\{{#records}}	
 					<div data-person-id="\{{id}}">
 						<p>
-							<h5>\{{displayname}}</h5><br>
+							<h5><a href="people/\{{id}}">\{{displayname}}</a></h5><br>
 							\{{culture}}, \{{displaydate}}<br>
 							Born: \{{birthplace}}<br>
 							Died: \{{deathplace}}
@@ -74,7 +74,7 @@
 				var urlBase = '/data/person';
 				var urlParameters = {
                     size: 100,
-                    q: "displayname:" + personname
+                    q: "names.displayname:" + personname
                 };
 				var url = urlBase + "?" + $.param(urlParameters);
 

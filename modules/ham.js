@@ -69,8 +69,18 @@ let Exhibitions = {
     }
 }
 
+let People = {
+    get: (id) => {
+        return _fetch(_makeGetUrl(ENDPOINTS.people, id));
+    },     
+    search: (parameters, aggregations) => {
+        return _fetch(_makeSearchUrl(ENDPOINTS.people, parameters, aggregations));
+    }
+}
+
 module.exports = {
     Exhibitions: Exhibitions,
     Images: Images,
     Objects: Objects,
+    People: People,
 };

@@ -1,0 +1,24 @@
+<header class="jumbotron grey lighten-4">
+    <h1>People Explorer</h1>
+    <p class="lead">Search for names in the Harvard Art Museums collections</p>
+</header>
+
+<div class="container-fluid p-4">
+
+    {{person.displayname}}
+
+    <div>
+        {{#person.names}}
+            {{type}}: {{displayname}}</br>
+        {{/person.names}}
+    </div>
+
+    <div>
+        VIAF: <a href="http://viaf.org/viaf/{{person.viaf_id}}">{{person.viaf_id}}</a><br>
+        ULAN: <a href="http://vocab.getty.edu/ulan/{{person.ulan_id}}">{{person.ulan_id}}</a><br>
+        Wikipedia: <a href="https://en.wikipedia.org/?curid={{person.wikipedia_id}}">{{person.wikipedia_id}}</a><br>
+        Wikidata: <a href="https://www.wikidata.org/wiki/{{person.wikidata_id}}">{{person.wikidata_id}}</a><br>
+        LCNAF: <a href="https://id.loc.gov/authorities/names/{{person.lcnaf_id}}">{{person.lcnaf_id}}</a><br>
+        HAM ID: <a href="{{person.url}}">{{person.id}}</a>
+    </div>
+</div>
