@@ -1,111 +1,133 @@
+<header class="jumbotron grey lighten-4">
+	<h1>People Explorer</h1>
+	<p class="lead">Search for names in the Harvard Art Museums collections</p>
+</header>
 
-		<header class="jumbotron grey lighten-4">
-			<h1>People Explorer</h1>
-			<p class="lead">Search for names in the Harvard Art Museums collections</p>
-		</header>
+<div class="container-fluid p-4">
+	<div class="pb-2">
+		<input type="text" id="personname" value=""></input>
+		<button type="button" class="btn btn-primary" id="search-people-button">Filter</button>
+		<button type="button" class="btn btn-light" id="reset-search-criteria">Clear</button>
+		<span id="info" class="body"></span>
+	</div>
+	<div id="paginator"></div>
+		
+	<div id="loader">
+		Fetching some people just for you <img src="/images/ajax-loader.gif" height="25">
+	</div>
+	<div id="people" class="container-fluid p-0"></div>
+</div>
 
-		<div class="container-fluid p-4">
-			<input type="text" id="personname" value="copley"></input><button id="search-people-button">Find Some People</button>
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="info-panel">
+		<span id="counter">Enter a name and click the "Filter" button</span>
+	</div>
+</footer>
+
+<script id="person-template" type="text/template">
+	<ul class="list-unstyled">
+	\{{#records}}	
+		<li>
+		<div data-person-id="\{{id}}">
+			<p>
+				<h5><a href="people/\{{id}}">\{{displayname}}</a></h5>
+
+				<div class="pb-4">
+					\{{#if culture}}
+						Culture: \{{culture}}</br>
+					\{{/if}}
+
+					\{{#if displaydate}}
+						Dates: \{{displaydate}}</br>
+					\{{/if}}
+
+					\{{#if birthplace}}
+						Born: \{{birthplace}}</br>
+					\{{/if}}
+
+					\{{#if deathplace}}
+						Died: \{{deathplace}}</br>
+					\{{/if}}        
+				</div>
+			</p>
+			<p>\{{objectcount}} objects are associated with \{{displayname}}. </p>
 			<hr>
-			<div id="loader">Fetching some people just for you <img src="/images/ajax-loader.gif" height="25"></div>
-			<div id="person"></div>
 		</div>
-
-		<footer class="page-footer grey darken-1 font-small p-3">
-			<div class="info-panel">
-				<span id="counter">Enter a name and click the "Find Some People" button</span>
+		</li>
+	\{{/records}}
+	</ul>
+</script>	
+<script id="info-template" type="text/template">
+	\{{totalrecords}} people 
+</script>
+<script id="related-objects-template" type="text/template">
+	<div>
+		\{{#records}}
+			<div style="position:relative;float:left;height:100px;margin:2px;">
+				<a href="\{{url}}" target="_blank"><img src="\{{primaryimageurl}}?height=100"></a>
 			</div>
-		</footer>
+		\{{/records}}
+	</div>
+	<div style="clear:both;"></div>
+</script>
 
-		<script id="person-template" type="text/template">
-			<div id="person-data">			
-				\{{#records}}	
-					<div data-person-id="\{{id}}">
-						<p>
-							<h5><a href="people/\{{id}}">\{{displayname}}</a></h5><br>
-							\{{culture}}, \{{displaydate}}<br>
-							Born: \{{birthplace}}<br>
-							Died: \{{deathplace}}
-						</p>
-						<p>
-							VIAF: <a href="http://viaf.org/viaf/\{{viaf_id}}">\{{viaf_id}}</a><br>
-							ULAN: <a href="http://vocab.getty.edu/ulan/\{{ulan_id}}">\{{ulan_id}}</a><br>
-							Wikipedia: <a href="https://en.wikipedia.org/?curid=\{{wikipedia_id}}">\{{wikipedia_id}}</a><br>
-							Wikidata: <a href="https://www.wikidata.org/wiki/\{{wikidata_id}}">\{{wikidata_id}}</a><br>
-							LCNAF: <a href="https://id.loc.gov/authorities/names/\{{lcnaf_id}}">\{{lcnaf_id}}</a><br>
-							HAM ID: <a href="\{{url}}">\{{id}}</a>
-						</p>
-						<p>\{{objectcount}} objects are associated with \{{displayname}}. <a href="#\{{id}}" onclick="fillObjects(\{{id}})">View a random sample</a>.</p>
-						<div id="\{{id}}-objects"></div>
-						<hr>
-					</div>
-				\{{/records}}
-			</div>
-		</script>	
-		<script id="related-objects-template" type="text/template">
-			<div>
-				\{{#records}}
-					<div style="position:relative;float:left;height:100px;margin:2px;">
-						<a href="\{{url}}" target="_blank"><img src="\{{primaryimageurl}}?height=100"></a>
-					</div>
-				\{{/records}}
-			</div>
-			<div style="clear:both;"></div>
-		</script>
-		<script id="stats-info-template" type="text/template">	
-			\{{#statsdates}} \{{start}} to \{{end}} \{{/statsdates}}
-		</script>
-		<script>
-		    document.addEventListener("DOMContentLoaded", function() {
-				$("#search-people-button").on("click", function() {
-					fillPerson();
-				});
-				$("#help-button").on("click", function() {
-					$('#help-message').toggle();
-				});
-			});
+<script>
 
-			function fillPerson() {
+	document.addEventListener("DOMContentLoaded", function() {
+		$("#search-people-button").on("click", function() {
+			fillPeople();
+		});
+
+		$("#reset-search-criteria").on("click", function() {
+			$("#personname").val('');
+			fillPeople();
+		});
+
+		fillPeople();
+	});
+
+
+	function fillPeople() {
+		var personname = $("#personname").val() || '*';
+		var urlBase = '/data/person';
+		var urlParameters = {
+			q: "displayname:" + personname,
+			sort: "alphasort"
+		};
+		var url = urlBase + "?" + $.param(urlParameters);
+
+		let peopleSource = $('#person-template').html();
+		let peopleTemplate = Handlebars.compile(peopleSource);
+		
+		let infoSource = $('#info-template').html();
+		let infoTemplate = Handlebars.compile(infoSource);
+		
+		$("#paginator").pagination({
+			dataSource: url,
+			locator: "records",
+			pageSize: 20,
+			alias: {
+				pageNumber: "page",
+				pageSize: "size"
+			},
+			totalNumberLocator: function(response) {
+				return response.info.totalrecords;
+			},
+			beforePaging: function() {
+				$('#people').html('');
 				$("#loader").show();
-				$("#person-data").hide();
-
-				var personname = $("#personname").val();
+			},
+			callback: function(data, pagination) {
+				let info;
 				
-				var urlBase = '/data/person';
-				var urlParameters = {
-                    size: 100,
-                    q: "names.displayname:" + personname
-                };
-				var url = urlBase + "?" + $.param(urlParameters);
+				info = infoTemplate({totalrecords: pagination.totalNumber});
+				$('#info').html(info);
 
-				$.getJSON(url, function(data) {
-					var template = $('#person-template').html();
-					var info = Mustache.to_html(template, data);
-					$('#person').html(info);
-
-					$("#loader").hide();
-					$("#person-data").show();
-
-					$("#counter").html(data.info.totalrecords + " people found");
-				});
-			}			
-
-			function fillObjects(personid) {
-				var urlBase = '/data/object'
-				var urlParameters = {
-                    person: personid, 
-                    size: 25,
-                    hasimage: 1,
-                    sort: "random"
-                };
-				var url = urlBase + "?" + $.param(urlParameters);
-
-				var objectBlock = '#' + personid + '-objects';
-
-				$.getJSON(url, function(objectData) {
-					var template = $('#related-objects-template').html();
-					var info = Mustache.to_html(template, objectData);
-					$(objectBlock).html(info);
-				});
+				info = peopleTemplate({records: data});
+				$('#people').html(info);
+				
+				$("#loader").hide();
 			}
-		</script>
+		})
+	}			
+</script>
