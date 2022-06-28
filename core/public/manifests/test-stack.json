@@ -1,0 +1,79 @@
+{
+    "@context": "http://iiif.io/api/presentation/2/context.json",
+    "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027",
+    "@type": "sc:Manifest",
+    "attribution": "Harvard Art Museums",
+    "description": "",
+    "label": "Engraved Hand Mirror with Ram's Head Terminal",
+    "logo": "http://www.harvardartmuseums.org/assets/images/logo.png",
+    "metadata": [
+        {
+            "label": "Credit Line",
+            "value": "Harvard Art Museums/Arthur M. Sackler Museum, Transfer from the Department of the Classics, Harvard University, Bequest of Henry W. Haynes, 1912"
+        },
+        {
+            "label": "Object Number",
+            "value": "2019.12"
+        }
+    ],
+    "rendering": {
+        "@id": "http://harvardartmuseums.org/collections/object/304027",
+        "format": "text/html",
+        "label": "Full record view"
+    },
+    "sequences": [
+        {
+            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/sequence/normal",
+            "@type": "sc:Sequence",
+            "canvases": [
+                {
+                    "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/canvas/canvas-490310586",
+                    "@type": "sc:Canvas",
+                    "height": 1658,
+                    "width": 2550,                    
+                    "label": "1",
+                    "images": [
+                        {
+                            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/annotation/anno-490310586",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "on": "https://iiif.harvardartmuseums.org/manifests/object/304027/canvas/canvas-490310586",
+                            "resource": {
+                                "@id": "https://ids.lib.harvard.edu/ids/iiif/490310586/full/full/0/native.jpg",
+                                "@type": "dctypes:Image",
+                                "format": "image/jpeg",
+                                "height": 1658,
+                                "service": {
+                                    "@context": "http://iiif.io/api/image/1/context.json",
+                                    "@id": "https://ids.lib.harvard.edu/ids/iiif/490310586",
+                                    "profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1"
+                                },
+                                "width": 2550
+                            }
+                        },
+                        {
+                            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/annotation/anno-490310638",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "on": "https://iiif.harvardartmuseums.org/manifests/object/304027/canvas/canvas-490310586",
+                            "resource": {
+                                "@id": "https://ids.lib.harvard.edu/ids/iiif/490310638/full/full/0/native.jpg",
+                                "@type": "dctypes:Image",
+                                "format": "image/jpeg",
+                                "height": 1646,
+                                "service": {
+                                    "@context": "http://iiif.io/api/image/1/context.json",
+                                    "@id": "https://ids.lib.harvard.edu/ids/iiif/490310638",
+                                    "profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1"
+                                },
+                                "width": 2550
+                            }
+                        }
+                    ]
+                }
+            ],
+            "viewingHint": "individuals"
+        }
+    ],
+    "within": "http://www.harvardartmuseums.org/collections"
+}

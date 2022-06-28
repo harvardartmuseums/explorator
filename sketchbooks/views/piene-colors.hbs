@@ -9,14 +9,15 @@
     
     .sketchbooks {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(60, 125px);
         grid-gap: 10px;
         grid-auto-rows: minmax(100px, auto);
     }
 
-    #sketchbook-set {
-        margin: 0px 0px 0px 0px;
-        padding: 0px;
+    .sketchbook-header {
+        height: 175px;
+        max-width: 125px;
+        word-wrap: break-word;
     }
 
     #loader {
@@ -77,7 +78,7 @@
 <!-- // The main view, with image display and information panel -->
 <script id="sketchbook-set-template" type="text/template">
     <div class="sketchbook" data-object-id="\{{id}}" id="">
-        <div>
+        <div class="sketchbook-header">
             <a href="\{{url}}" target="_blank">\{{objectnumber}}</a><br/>
             \{{title}}</br>
             \{{dated}}
@@ -93,8 +94,10 @@
     </div>
 </script>	
 
-
+<script src="../data/data.js"></script>
 <script>
+    let sketchbooks = [];
+
     document.addEventListener("DOMContentLoaded", function() {
         var imageURLParamsL = '?width=50&height=50';
         var imageURLParamsM = '?height=150';
@@ -116,18 +119,15 @@
         });
 
         Handlebars.registerHelper('colorPercentToWidth', function(amount) {
-            return Math.ceil(amount * 200);
+            return Math.ceil(amount * 100);
         });
 
-        $('#sketchbook-set').hide();
         $('#loader').show();
 
-        getObjects("2019.1");
-        getObjects("2019.8");
-        getObjects("2019.11");
-        getObjects("2019.25");
-        getObjects("2019.47");
-        
+        piene.objects.forEach(o => {
+            getObjects(o);
+        });
+
         $('.sketchbooks').show();
         $('#loader').hide();
     });
@@ -135,16 +135,25 @@
     // Gets a set of twenty-five sketchbook objects, based on 
     // the given field/value search, and updates the 
     // explorer accordingly
-    async function getObjects(value) {
-        let urlSketchbook = `/data/object?objectnumber=${value}&person=28069&size=1`; 
+    async function getObjects(o) {
+        let urlSketchbook = `/data/object?objectnumber=${o.ObjectNumber}&person=28069&size=1`; 
         const data = await fetch(urlSketchbook).then(response => response.json());
         let sketchbook = data.records[0];
 
-        urlPages = `/data/object?objectnumber=${value}.*&fields=primaryimageurl,objectnumber,date,title,colors&size=100&sort=id&sortorder=asc`; 
+        if (o.HasChildren == 0) {
+            urlPages = `/data/image?q=id:(>=${o.ImageIDMin}%20AND%20<=${o.ImageIDMax})&size=100&sort=id&sortorder=asc`; 
+        } else {
+            urlPages = `/data/object?objectnumber=${o.ObjectNumber}.*&fields=primaryimageurl,objectnumber,date,title,colors&size=100&sort=id&sortorder=asc`; 
+        }
+
         let results = await fetch(urlPages).then(response => response.json());
         results.records.forEach(r => {
             let c = _.sortBy(r.colors, ['percent']);
             r.colors = c;
+            if (!_.has(r, 'title')) {
+                r.title = sketchbook.title;
+                r.primaryimageurl = r.baseimageurl;
+            }
         });
         let pages = results.records;
 
@@ -153,11 +162,17 @@
             results.records.forEach(r => {
                 let c = _.sortBy(r.colors, ['percent']);
                 r.colors = c;
+                if (!_.has(r, 'title')) {
+                    r.title = sketchbook.title;
+                    r.primaryimageurl = r.baseimageurl;
+                }                
             });
             pages = _.concat(pages, results.records);
         }
 
         sketchbook.pages = pages;
+
+        sketchbooks.push(sketchbook);
 
         var source = $('#sketchbook-set-template').html();
         var template = Handlebars.compile(source);

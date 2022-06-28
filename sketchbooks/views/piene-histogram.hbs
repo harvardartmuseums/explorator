@@ -1,0 +1,144 @@
+<div class="container-fluid p-4 min-vh-100">
+    <div id="loader">
+        <p class="message">Fetching some beautiful sketchbooks just for you...</p>
+        <img src="/images/ajax-loader.gif">
+    </div>
+    <div class="sketchbooks container"></div>
+    <div class="color-details"></div>
+</div>
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="container-responsive text-left">
+			Made with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>, <a href="https://nodejs.org/en/">Node.js</a>, <a href="https://getbootstrap.com/">Bootstrap</a>, <a href="https://mdbootstrap.com/">Material Design for Bootstrap</a>, <a href="https://d3js.org/">D3</a>
+	</div>	
+</footer>
+
+
+
+
+<!-- // The main view, with image display and information panel -->
+<script id="sketchbook-histogram-template" type="text/template">
+    <div class="histogram" id="">
+        \{{#each this}}
+            <div class="color-panel" data-color="\{{color}}" style="float:left">						
+                 <div class="color-swatch" style="background:\{{color}};width:40px;height:40px;border-radius:50%" title=""></div>
+            </div>
+        \{{/each}}
+    </div>
+</script>	
+
+<script src="../data/data.js"></script>
+<script src="../data/images.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var imageURLParamsL = '?width=50&height=50';
+        var imageURLParamsM = '?height=150';
+
+        Handlebars.registerHelper('imageURL', function(image) {
+            if (image) {
+                return image + imageURLParamsL;
+            } else {
+                return "img/no_image.png";
+            }
+        });
+
+        Handlebars.registerHelper('imageURLMedium', function(image) {
+            if (image) {
+                return image + imageURLParamsM;
+            } else {
+                return "img/no_image_thumb.png";
+            }
+        });
+
+        Handlebars.registerHelper('colorPercentToWidth', function(amount) {
+            return Math.ceil(amount * 100);
+        });
+
+        piene.colors.forEach(c => {
+            var hex = c.color.substring(1);
+
+            /* Get the RGB values to calculate the Hue. */
+            var r = parseInt(hex.substring(0, 2), 16) / 255;
+            var g = parseInt(hex.substring(2, 4), 16) / 255;
+            var b = parseInt(hex.substring(4, 6), 16) / 255;
+            
+            /* Getting the Max and Min values for Chroma. */
+            var max = Math.max.apply(Math, [r, g, b]);
+            var min = Math.min.apply(Math, [r, g, b]);
+            
+            
+            /* Variables for HSV value of hex color. */
+            var chr = max - min;
+            var hue = 0;
+            var val = max;
+            var sat = 0;
+            
+            if (val > 0) {
+                /* Calculate Saturation only if Value isn't 0. */
+                sat = chr / val;
+                if (sat > 0) {
+                    if (r == max) {
+                        hue = 60 * (((g - min) - (b - min)) / chr);
+                        if (hue < 0) {
+                            hue += 360;
+                        }
+                    } else if (g == max) {
+                        hue = 120 + 60 * (((b - min) - (r - min)) / chr);
+                    } else if (b == max) {
+                        hue = 240 + 60 * (((r - min) - (g - min)) / chr);
+                    }
+                }
+            }
+            c.chroma = chr;
+            c.hue = hue;
+            c.sat = sat;
+            c.val = val;
+            c.luma = 0.3 * r + 0.59 * g + 0.11 * b;
+            c.red = parseInt(hex.substring(0, 2), 16);
+            c.green = parseInt(hex.substring(2, 4), 16);
+            c.blue = parseInt(hex.substring(4, 6), 16);             
+        });
+
+        {{!-- let colors = _.sortBy(piene.colors, "hue"); --}}
+        let colors = _.chain(piene.colors).sortBy("luma").sortBy("sat").sortBy("hue").value();
+        
+        var source = $('#sketchbook-histogram-template').html();
+        var template = Handlebars.compile(source);
+        var info = template(colors);
+        $('.sketchbooks').append(info);
+        
+        $('.color-panel').on('click', event => {
+            let selectedColor = $(event.currentTarget).data("color");
+            getPagesByColor(selectedColor);
+        });
+
+        $('.sketchbooks').show();
+        $('#loader').hide();        
+    });
+
+
+    async function getPagesByColor(c) {
+
+        let set = _.filter(images, {colors: [{color: c}]});
+
+        let group = document.getElementsByClassName("color-details");
+        set.forEach(page => {
+            let img = document.createElement('img');
+            img.src = `${page.iiifbaseuri}/full/!150,150/0/default.jpg`;
+            group[0].append(img);
+        });
+
+        {{!-- let color = encodeURIComponent(c);
+        let url = `/data/object?color=${color}&person=28069&worktype=337&size=100`; 
+        const data = await fetch(url).then(response => response.json());
+        let pages = data.records;
+
+        let group = document.getElementsByClassName("color-details");
+        pages.forEach(page => {
+            let img = document.createElement('img');
+            img.src = `${page.images[0].iiifbaseuri}/full/!150,150/0/default.jpg`;
+            group[0].append(img);
+        }); --}}
+    }
+
+</script>

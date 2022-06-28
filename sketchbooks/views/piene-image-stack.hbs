@@ -1,0 +1,51 @@
+<style>
+    .image-group {
+        {{!-- display: block; --}}
+    }
+
+    img {
+        opacity: 0.5;
+        position:fixed;
+    }
+</style>
+
+
+
+<div class="container">
+    <div class="d-flex justify-content-center my-2 mb-4">
+        <span class="font-weight-bold black-text mr-2"><i class="fas fa-minus" aria-hidden="true"></i></span>
+        <form class="range-field w-100">
+            <input type="range" min="0" max="6" class="border-0 custom-range" id="flipper">
+        </form>
+        <span class="font-weight-bold black-text ml-2"><i class="fas fa-plus" aria-hidden="true"></i></span>
+    </div>	
+
+</div>
+<div class="container">
+    <div class="image-group" id="stack">
+    </div>
+</div>    
+
+<script type="text/javascript">
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const startID = 772571;
+        const endID = 772688;
+
+        for (j=startID; j<=endID; j++) {
+            let img = document.createElement("img");
+            img.src = `https://nrs.harvard.edu/urn-3:HUAM:${j}`;
+            $('#stack').append(img); 
+        }
+
+        let i = $("img");
+        
+        $("#flipper").prop("max", i.length-1);
+
+        $("#flipper").on("input change", function(e) {
+            let index = $(this).val();
+            $("img").css("opacity",0.0);
+            $(i[index]).css("opacity",1.0);
+        });
+    });
+</script>

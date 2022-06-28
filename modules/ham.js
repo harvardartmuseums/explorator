@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
 const querystring = require('querystring');
-const { response } = require('express');
 
 const API_KEY = process.env.APIKEY;
 const API_BASE_URL = 'https://api.harvardartmuseums.org'
@@ -8,8 +7,16 @@ const API_BASE_URL = 'https://api.harvardartmuseums.org'
 const ENDPOINTS = {
     exhibitions: 'exhibition',
     images: 'image', 
+    audio: 'audio', 
+    videos: 'video', 
     objects: 'object',
     people: 'person',
+    galleries: 'gallery',
+    publications: 'publication',
+    annotations: 'annotation',
+    spectrum: 'spectrum',
+    sites: 'site',
+    activities: 'activity'
 };
 
 function _makeSearchUrl(endpoint, parameters, aggregations) {
@@ -51,6 +58,24 @@ let Images = {
     }
 }
 
+let Audio = {
+    get: (id) => { 
+        return _fetch(_makeGetUrl(ENDPOINTS.audio, id)); 
+    },     
+    search: (parameters, aggregations) => { 
+        return _fetch(_makeSearchUrl(ENDPOINTS.audio, parameters, aggregations)); 
+    }
+}
+
+let Videos = {
+    get: (id) => { 
+        return _fetch(_makeGetUrl(ENDPOINTS.videos, id)); 
+    },     
+    search: (parameters, aggregations) => { 
+        return _fetch(_makeSearchUrl(ENDPOINTS.videos, parameters, aggregations)); 
+    }
+}
+
 let Objects = {
     get: (id) => {
         return _fetch(_makeGetUrl(ENDPOINTS.objects, id));
@@ -69,6 +94,15 @@ let Exhibitions = {
     }
 }
 
+let Publications = {
+    get: (id) => {
+        return _fetch(_makeGetUrl(ENDPOINTS.publications, id));
+    },     
+    search: (parameters, aggregations) => {
+        return _fetch(_makeSearchUrl(ENDPOINTS.publications, parameters, aggregations));
+    }
+}
+
 let People = {
     get: (id) => {
         return _fetch(_makeGetUrl(ENDPOINTS.people, id));
@@ -78,9 +112,21 @@ let People = {
     }
 }
 
+let Galleries = {
+    get: (id) => {
+        return _fetch(_makeGetUrl(ENDPOINTS.galleries, id));
+    },     
+    search: (parameters, aggregations) => {
+        return _fetch(_makeSearchUrl(ENDPOINTS.galleries, parameters, aggregations));
+    }
+}
 module.exports = {
     Exhibitions: Exhibitions,
     Images: Images,
     Objects: Objects,
     People: People,
+    Publications: Publications,
+    Audio: Audio,
+    Videos: Videos,
+    Galleries: Galleries
 };

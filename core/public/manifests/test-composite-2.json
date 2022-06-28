@@ -1,0 +1,155 @@
+{
+    "@context": "http://iiif.io/api/presentation/2/context.json",
+    "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027",
+    "@type": "sc:Manifest",
+    "attribution": "Harvard Art Museums",
+    "description": "",
+    "label": "Engraved Hand Mirror with Ram's Head Terminal",
+    "logo": "http://www.harvardartmuseums.org/assets/images/logo.png",
+    "metadata": [
+        {
+            "label": "Credit Line",
+            "value": "Harvard Art Museums/Arthur M. Sackler Museum, Transfer from the Department of the Classics, Harvard University, Bequest of Henry W. Haynes, 1912"
+        },
+        {
+            "label": "Object Number",
+            "value": "2019.12"
+        }
+    ],
+    "rendering": {
+        "@id": "http://harvardartmuseums.org/collections/object/363145",
+        "format": "text/html",
+        "label": "Full record view"
+    },
+    "sequences": [
+        {
+            "@id": "https://iiif.harvardartmuseums.org/manifests/object/363145/sequence/normal",
+            "@type": "sc:Sequence",
+            "canvases": [
+                {
+                    "@id": "https://iiif.harvardartmuseums.org/manifests/object/363145/composite",
+                    "@type": "sc:Canvas",
+                    "height": 1658,
+                    "width": 2550,                    
+                    "label": "1",
+                    "images": [
+                        {
+                            "@context": "http://iiif.io/api/presentation/2/context.json",
+                            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/annotation/anno-490022866",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "on": "https://iiif.harvardartmuseums.org/manifests/object/363145/composite#xywh=0,50,2550,1658",
+                            "resource": {
+                                "@id": "https://ids.lib.harvard.edu/ids/iiif/490022866/100,100,2375,1500/full/0/native.jpg",
+                                "@type": "oa:SpecificResource",
+                                "default": {
+                                    "@id": "https://ids.lib.harvard.edu/ids/iiif/490022866/full/full/0/native.jpg",
+                                    "@type": "dctypes:Image",
+                                    "format": "image/jpeg",
+                                    "height": 1658,
+                                    "width": 2550,
+                                    "service": {
+                                        "@context": "http://iiif.io/api/image/1/context.json",
+                                        "@id": "https://ids.lib.harvard.edu/ids/iiif/490022866",
+                                        "profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1"
+                                    }
+                                },
+                                "selector": {
+                                    "@context": "http://iiif.io/api/annex/openannotation/context.json",
+                                    "@type": "iiif:ImageApiSelector",
+                                    "region": "100,100,2375,1500"
+                                }
+                            }
+                        },
+                        {
+                            "@context": "http://iiif.io/api/presentation/2/context.json",
+                            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/annotation/anno-490022906",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "on": "https://iiif.harvardartmuseums.org/manifests/object/363145/composite#xywh=2550,0,2550,1658",
+                            "resource": {
+                                "@id": "https://ids.lib.harvard.edu/ids/iiif/490022906/195,100,2280,1500/full/0/native.jpg",
+                                "@type": "oa:SpecificResource",
+                                "default": {
+                                    "@id": "https://ids.lib.harvard.edu/ids/iiif/490022906/full/full/0/native.jpg",
+                                    "@type": "dctypes:Image",
+                                    "format": "image/jpeg",
+                                    "height": 1658,
+                                    "width": 2550,
+                                    "service": {
+                                        "@context": "http://iiif.io/api/image/1/context.json",
+                                        "@id": "https://ids.lib.harvard.edu/ids/iiif/490022906",
+                                        "profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1"
+                                    }
+                                },
+                                "selector": {
+                                    "@context": "http://iiif.io/api/annex/openannotation/context.json",
+                                    "@type": "iiif:ImageApiSelector",
+                                    "region": "195,100,2280,1500"
+                                }
+                            }
+                        },
+                        {
+                            "@context": "http://iiif.io/api/presentation/2/context.json",
+                            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/annotation/anno-490022902",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "on": "https://iiif.harvardartmuseums.org/manifests/object/363145/composite#xywh=5100,0,2550,1658",
+                            "resource": {
+                                "@id": "https://ids.lib.harvard.edu/ids/iiif/490022902/195,100,2280,1500/full/0/native.jpg",
+                                "@type": "oa:SpecificResource",
+                                "default": {
+                                    "@id": "https://ids.lib.harvard.edu/ids/iiif/490022902/full/full/0/native.jpg",
+                                    "@type": "dctypes:Image",
+                                    "format": "image/jpeg",
+                                    "height": 1658,
+                                    "width": 2550,
+                                    "service": {
+                                        "@context": "http://iiif.io/api/image/1/context.json",
+                                        "@id": "https://ids.lib.harvard.edu/ids/iiif/490022902",
+                                        "profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1"
+                                    }
+                                },
+                                "selector": {
+                                    "@context": "http://iiif.io/api/annex/openannotation/context.json",
+                                    "@type": "iiif:ImageApiSelector",
+                                    "region": "195,100,2280,1500"
+                                }
+                            }
+                        },
+                        {
+                            "@context": "http://iiif.io/api/presentation/2/context.json",
+                            "@id": "https://iiif.harvardartmuseums.org/manifests/object/304027/annotation/anno-490023114",
+                            "@type": "oa:Annotation",
+                            "motivation": "sc:painting",
+                            "on": "https://iiif.harvardartmuseums.org/manifests/object/363145/composite#xywh=7650,0,2550,1658",
+                            "resource": {
+                                "@id": "https://ids.lib.harvard.edu/ids/iiif/490023114/195,100,2280,1500/full/0/native.jpg",
+                                "@type": "oa:SpecificResource",
+                                "default": {
+                                    "@id": "https://ids.lib.harvard.edu/ids/iiif/490023114/full/full/0/native.jpg",
+                                    "@type": "dctypes:Image",
+                                    "format": "image/jpeg",
+                                    "height": 1658,
+                                    "width": 2550,
+                                    "service": {
+                                        "@context": "http://iiif.io/api/image/1/context.json",
+                                        "@id": "https://ids.lib.harvard.edu/ids/iiif/490023114",
+                                        "profile": "http://library.stanford.edu/iiif/image-api/1.1/conformance.html#level1"
+                                    }
+                                },
+                                "selector": {
+                                    "@context": "http://iiif.io/api/annex/openannotation/context.json",
+                                    "@type": "iiif:ImageApiSelector",
+                                    "region": "195,100,2280,1500"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            "viewingHint": "individuals"
+        }
+    ],
+    "within": "http://www.harvardartmuseums.org/collections"
+}

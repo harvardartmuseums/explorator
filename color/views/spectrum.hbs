@@ -1,0 +1,115 @@
+<style>
+    #spectrum {top:122px;}
+    .copybutton {
+        display: inline-block;
+        background-image: url( 'img/copy.png' );
+        background-size: 25px 25px;
+        background-position: 50% 50%;
+        border: none;
+        height: 25px;  
+        width: 25px;
+    }
+    button span {
+        display: none;
+    }
+</style>
+
+
+<img class="p-4" src="https://ids.lib.harvard.edu/ids/iiif/437958013/full/400,/0/default.jpg">
+<div id="spectrum" class="position-absolute"></div>
+<span id="today" class="position-fixed"></span>
+<span id="info" class="position-fixed"></span>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script type="text/javascript">
+    var monthNames = [ "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December" ];
+
+    let infoPanel = document.getElementById("info");
+    let todayPanel = document.getElementById("today");
+
+    Date.prototype.getDOY = function() {
+        var onejan = new Date(this.getFullYear(),0,1);
+        return Math.ceil((this - onejan) / 86400000);
+    }
+
+    Date.prototype.isLeapYear = function() {
+        return (new Date(this.getYear(), 1, 29).getMonth() == 1);       
+    }
+
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    // So many magic numbers. Deal with this!
+    var headerHeight = 122;
+    var isLeapYear = new Date().isLeapYear();
+    var daysInTheYear = isLeapYear ? 366 : 365;
+    var dayOfYear = new Date().getDOY();
+
+    // Chart dimensions.
+    var margin = {top: 0, right: 0, bottom: 0, left: 0},
+        width = window.innerWidth - margin.right - margin.left,
+        height = window.innerHeight - margin.top - margin.bottom - headerHeight;        
+
+    var barWidth = Math.floor((width)/daysInTheYear);
+    var barStartingPosition = Math.floor((width-(daysInTheYear*barWidth))/2);
+
+    var svg = d3.select("#spectrum").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+    var url = "/data/spectrum?size=366&sort=daynumber";
+    d3.json(url, function(data) {
+        if (!isLeapYear) {data.records.splice(59,1);}
+
+        data.records.forEach(function(d) {
+            if (!isLeapYear && d.daynumber > 59) {
+                d.daynumber = d.daynumber-1;
+            }
+            d.isToday = (d.daynumber==dayOfYear) ? true : false;
+            d.rgb = hexToRgb(d.color);
+            d.monthName = monthNames[d.month-1];
+        });
+
+        var bars = svg.selectAll("rect")
+                        .data(data.records)
+                    .enter().append("rect")
+                        .style("fill", function (d) {return d.color;})
+                        .attr("class", "color-bar")
+                        .attr("data-clipboard-target", "#selectedhex")
+                        .attr("width", barWidth + "px")
+                        .attr("height", function(d) {return d.isToday ? "200px" :  "100px";})
+                        .attr("x", function(d) {return barStartingPosition + barWidth*(d.daynumber-1);})
+                        .attr("y",  function(d) {return d.isToday ? height/2 - 150 : height/2-50;})
+                        .on("mouseover", function(d) {
+                            if (!d.isToday) {
+                                infoPanel.innerHTML = `${d.monthName} ${d.day}, <span id='selectedhex'>${d.color}</span>, R:${d.rgb.r} G:${d.rgb.g} B:${d.rgb.b}`;
+                                var t = d3.select(this);
+                                t.attr("height", "200px");
+                                infoPanel.style.left = `${t.attr("x")}px`;
+                            }
+                        })
+                        .on("mouseout", function(d) {
+                            if (!d.isToday) {
+                                d3.select(this).attr("height", "100px");
+                                infoPanel.innerHTML = '';
+                            }
+                        });
+
+        infoPanel.style.top = `${height/2 + 150 + headerHeight}px`;                
+
+        // Call out the color of the day
+        data.records.forEach(function(d) {
+            if (d.isToday) {
+                todayPanel.innerHTML = `Today is ${d.monthName} ${d.day}, <span id='todayhex'>${d.color}</span>, R:${d.rgb.r} G:${d.rgb.g} B:${d.rgb.b}  <button data-clipboard-target='#todayhex' class='copybutton' type='button'><span>Copy</span></button>`;
+                todayPanel.style.left = `${barStartingPosition + barWidth*(d.daynumber-1)}px`;
+                todayPanel.style.top = `${height/2 - 163 + headerHeight - 15}px`;
+            }
+        });
+    });
+</script>        

@@ -11,6 +11,7 @@ var analytics = require('../analytics/app');
 var people = require('../people/app');
 var sketchbooks = require('../sketchbooks/app');
 var images = require('../images/app');
+var color = require('../color/app');
 
 var app = express();
 
@@ -32,6 +33,7 @@ app.use('/analytics', analytics);
 app.use('/people', people);
 app.use('/sketchbooks', sketchbooks);
 app.use('/images', images);
+app.use('/color', color);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
