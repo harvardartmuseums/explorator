@@ -1,20 +1,3 @@
-<style>
-    #spectrum {top:122px;}
-    .copybutton {
-        display: inline-block;
-        background-image: url( 'img/copy.png' );
-        background-size: 25px 25px;
-        background-position: 50% 50%;
-        border: none;
-        height: 25px;  
-        width: 25px;
-    }
-    button span {
-        display: none;
-    }
-</style>
-
-
 <img class="p-4" src="https://ids.lib.harvard.edu/ids/iiif/437958013/full/400,/0/default.jpg">
 <div id="spectrum" class="position-absolute"></div>
 <span id="today" class="position-fixed"></span>
@@ -59,6 +42,10 @@
     var barWidth = Math.floor((width)/daysInTheYear);
     var barStartingPosition = Math.floor((width-(daysInTheYear*barWidth))/2);
 
+    document.getElementById("spectrum").style.top = `${headerHeight}px`;
+
+    infoPanel.style.top = `${height/2 + 150 + headerHeight}px`;
+
     var svg = d3.select("#spectrum").append("svg")
             .attr("width", width)
             .attr("height", height);
@@ -74,21 +61,26 @@
             d.isToday = (d.daynumber==dayOfYear) ? true : false;
             d.rgb = hexToRgb(d.color);
             d.monthName = monthNames[d.month-1];
+
+            // Call out the color of the day
+            if (d.isToday) {
+                todayPanel.innerHTML = `Today is ${d.monthName} ${d.day}, ${d.color}, R:${d.rgb.r} G:${d.rgb.g} B:${d.rgb.b}  <a class='p-2' onclick='javascript:navigator.clipboard.writeText("${d.color}")'><i class="fas fa-clipboard"></i></a>`;
+                todayPanel.style.left = `${barStartingPosition + barWidth*(d.daynumber-1)}px`;
+                todayPanel.style.top = `${height/2 - 163 + headerHeight - 15}px`;
+            }
         });
 
         var bars = svg.selectAll("rect")
                         .data(data.records)
                     .enter().append("rect")
                         .style("fill", function (d) {return d.color;})
-                        .attr("class", "color-bar")
-                        .attr("data-clipboard-target", "#selectedhex")
                         .attr("width", barWidth + "px")
                         .attr("height", function(d) {return d.isToday ? "200px" :  "100px";})
                         .attr("x", function(d) {return barStartingPosition + barWidth*(d.daynumber-1);})
                         .attr("y",  function(d) {return d.isToday ? height/2 - 150 : height/2-50;})
                         .on("mouseover", function(d) {
                             if (!d.isToday) {
-                                infoPanel.innerHTML = `${d.monthName} ${d.day}, <span id='selectedhex'>${d.color}</span>, R:${d.rgb.r} G:${d.rgb.g} B:${d.rgb.b}`;
+                                infoPanel.innerHTML = `${d.monthName} ${d.day}, ${d.color}, R:${d.rgb.r} G:${d.rgb.g} B:${d.rgb.b}`;
                                 var t = d3.select(this);
                                 t.attr("height", "200px");
                                 infoPanel.style.left = `${t.attr("x")}px`;
@@ -99,17 +91,10 @@
                                 d3.select(this).attr("height", "100px");
                                 infoPanel.innerHTML = '';
                             }
+                        })
+                        .on("click", function(d) {
+                            navigator.clipboard.writeText(d.color);
                         });
-
-        infoPanel.style.top = `${height/2 + 150 + headerHeight}px`;                
-
-        // Call out the color of the day
-        data.records.forEach(function(d) {
-            if (d.isToday) {
-                todayPanel.innerHTML = `Today is ${d.monthName} ${d.day}, <span id='todayhex'>${d.color}</span>, R:${d.rgb.r} G:${d.rgb.g} B:${d.rgb.b}  <button data-clipboard-target='#todayhex' class='copybutton' type='button'><span>Copy</span></button>`;
-                todayPanel.style.left = `${barStartingPosition + barWidth*(d.daynumber-1)}px`;
-                todayPanel.style.top = `${height/2 - 163 + headerHeight - 15}px`;
-            }
-        });
+               
     });
 </script>        
