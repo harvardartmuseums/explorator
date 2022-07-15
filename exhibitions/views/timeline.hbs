@@ -1,0 +1,19 @@
+<link title="timeline-styles" rel="stylesheet" href="//cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
+<script src="//cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+
+<div id='timeline-embed'></div>
+
+<script>
+    let timeline;
+
+    start();
+
+    async function start() {
+        let data = await fetch('/exhibitions/data/timeline');
+        let events = await data.json();
+        timeline = new TL.Timeline('timeline-embed',
+            {events: events},
+            {timenav_height_percentage: 50}
+        );  
+    }
+</script>
