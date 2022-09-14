@@ -64,6 +64,9 @@
 			</script>
 			<script>
 				var template;
+				var panel = $("#object-details-panel");
+				var body = $("#object-details-body");
+				var maxYear = new Date().getFullYear();
 
 				$(function() {
 					
@@ -72,8 +75,11 @@
 					
 				);
 
+				panel.on('hide.bs.modal', function (e) {
+					$("li img").attr("style", "opacity:1.0");
+				})
+
 				function fillTopFive() {
-					var maxYear = new Date().getFullYear();
 					var agg = {
 						"by_year": {
 							"date_histogram": {
@@ -157,10 +163,6 @@
 				}
 
 				function renderObjectDetails(objectId) {
-					var panel = $("#object-details-panel");
-					var body = $("#object-details-body");
-
-
 					$.getJSON(`/data/object/${objectId}`, data => {
 						var objectDetailsTemplate = $('#object-details-template').html();
 						var content = Mustache.to_html(objectDetailsTemplate, data);
@@ -217,7 +219,7 @@
 										"min_doc_count": 0,
 										"extended_bounds": {
 											"min": "2009-01",
-											"max": "2020-12"
+											"max": maxYear.toString() + "-12"
 										}
 									},
 									"aggs": {
