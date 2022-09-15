@@ -4,7 +4,7 @@ var HAM = require('../../modules/ham');
 
 /* GET most viewed online page. */
 router.get('/', function(req, res, next) {
-  res.render('people-index', {layout: 'layout.hbs', title: 'People Explorer | Explorator | Harvard Art Museums' });
+  res.render('people-index', {layout: '../../core/views/layout.hbs', title: 'People Explorer | Explorator | Harvard Art Museums' });
 });
 
 router.get('/:id', async function(req, res, next) {
@@ -15,7 +15,7 @@ router.get('/:id', async function(req, res, next) {
 
   person.objects = objects.records;
 
-  res.render('people-details', {layout: 'layout.hbs', title: 'People Explorer | Explorator | Harvard Art Museums', person: person});
+  res.render('people-details', {layout: '../../core/views/layout.hbs', title: 'People Explorer | Explorator | Harvard Art Museums', person: person});
 });
 
 module.exports = router;

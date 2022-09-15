@@ -5,12 +5,12 @@ var HAM = require('../../modules/ham');
 
 /* GET the main image page. */
 router.get('/', function(req, res, next) {
-  res.render('index', {layout: 'layout.hbs', title: 'Exhibition Explorer | Explorator | Harvard Art Museums' });
+  res.render('index', {layout: '../../core/views/layout.hbs', title: 'Exhibition Explorer | Explorator | Harvard Art Museums' });
 });
 
 /* GET the exhibition timeline page. */
 router.get('/timeline', function(req, res, next) {
-    res.render('timeline', {layout: 'layout.hbs', title: 'Timeline | Exhibition Explorer | Explorator | Harvard Art Museums'});
+    res.render('timeline', {layout: '../../core/views/layout.hbs', title: 'Timeline | Exhibition Explorer | Explorator | Harvard Art Museums'});
 });
 
 router.get('/data/timeline', function(req, res, next) {

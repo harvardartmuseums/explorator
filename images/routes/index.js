@@ -5,12 +5,12 @@ var HAM = require('../../modules/ham');
 
 /* GET the main image page. */
 router.get('/', function(req, res, next) {
-  res.render('index', {layout: 'layout.hbs', title: 'Image Explorer | Explorator | Harvard Art Museums' });
+  res.render('index', {layout: '../../core/views/layout.hbs', title: 'Image Explorer | Explorator | Harvard Art Museums' });
 });
 
 /* GET the image browser page. */
 router.get('/browse', function(req, res, next) {
-  res.render('browse', {layout: 'layout.hbs', title: 'Browser | Image Explorer | Explorator | Harvard Art Museums' });
+  res.render('browse', {layout: '../../core/views/layout.hbs', title: 'Browser | Image Explorer | Explorator | Harvard Art Museums' });
 });
 
 /* GET the image alt text roulette page. */
@@ -24,7 +24,7 @@ router.get('/alt-text/roulette', function(req, res, next) {
   HAM.Objects.search(criteria)
      .then(data => {
         let record = data.records[0];
-        res.render('roulette', {layout: 'layout.hbs', title: 'Alt Text Roulette | Image Explorer | Explorator | Harvard Art Museums', object: record});
+        res.render('roulette', {layout: '../../core/views/layout.hbs', title: 'Alt Text Roulette | Image Explorer | Explorator | Harvard Art Museums', object: record});
      });
 });
 
