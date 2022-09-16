@@ -6,7 +6,7 @@ var router = express.Router();
 var cache = apicache.middleware;
 
 var apikey = process.env.APIKEY;
-var apiURL = "http://api.harvardartmuseums.org";
+var apiURL = "https://api.harvardartmuseums.org";
 
 router.get('/:endpoint', cache('12 hours'), function(req, res, next) {
 	var url = apiURL;
