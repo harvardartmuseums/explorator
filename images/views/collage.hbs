@@ -1,0 +1,33 @@
+<header class="jumbotron grey lighten-4">
+	<h1>Collager ✂</h1>
+	<p class="lead">Make some art!</p>
+</header>
+
+<section>
+    <div class="container-fluid pb-5 pl-5">
+        <form action="collage/viewer/">
+            <div class="form-group">
+                <label for="quantity">Number of images</label>
+                <select id="quantity" name="quantity"><option>2</option><option>3</option><option>4</option></select>
+            </div>
+            
+            <div class="form-group">
+                <label>Style</label>
+                <select id="style" name="style"><option selected>Grid</option></select>
+            </div>    
+            
+            <div class="form-group">
+                <label>Art types</label>
+                <select id="types" name="types"><option>Coins</option><option>Paintings</option></select>
+            </div>        
+
+            <button class="btn btn-lg btn-primary" type="submit">Create It</button>
+        </form>
+    </div>
+</section>
+
+<footer class="page-footer grey darken-1 font-small p-3 fixed-bottom">
+	<div class="container-responsive text-left">
+			Collager ✂: Another R&amp;D project from the department of Digital Infrastructure and Emerging Technology at <a href="https://hvrd.art">Harvard Art Museums</a>
+	</div>	
+</footer>

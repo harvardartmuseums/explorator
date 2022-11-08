@@ -1,0 +1,16 @@
+<div class="container">
+	<section>
+        {{#each images}}
+			<img class="img-responsive" src="{{lookup collage @index}}">
+        {{/each}}
+	</section>
+
+
+	<section>
+		<ul class="list-group list-group-flush">
+		{{#each images}}
+			<li class="list-group-item"><a href="https://hvrd.art/o/{{object.id}}">{{object.title}}</a></li>
+		{{/each}}
+		</ul>
+	</section>
+</div>
