@@ -120,6 +120,17 @@ let Galleries = {
         return _fetch(_makeSearchUrl(ENDPOINTS.galleries, parameters, aggregations));
     }
 }
+
+let Annotations = {
+    get: (id) => {
+        return _fetch(_makeGetUrl(ENDPOINTS.annotations, id));
+    },     
+    search: (parameters, aggregations) => {
+        return _fetch(_makeSearchUrl(ENDPOINTS.annotations, parameters, aggregations));
+    }
+}
+
+
 module.exports = {
     Exhibitions: Exhibitions,
     Images: Images,
@@ -128,5 +139,6 @@ module.exports = {
     Publications: Publications,
     Audio: Audio,
     Videos: Videos,
-    Galleries: Galleries
+    Galleries: Galleries,
+    Annotations: Annotations
 };
