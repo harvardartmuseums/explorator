@@ -1,0 +1,161 @@
+
+<header class="jumbotron grey lighten-4">
+    <h1>Magnetic Poetry</h1>
+    <p class="lead"></p>
+</header>
+
+<div class="container-fluid">
+    <button id="reset" type="button">Reset</button> 
+	<div class="row">
+		<div class="col-md-3" id="word-list"></div>
+		{{!-- <div class="col-md-9 magnetic-refrigerator" id="refrigerator"></div> --}}
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+<script>
+    let wordList =  ["orange", "red", "blue", "paradise", "florida", "submarines", "food", "good", 
+				"the", "the", "the", "the", "as", "in", "is", "is", "of", "of", "and", "and", "and", 
+				"are", "are", "are", "are", "to", "to", "too", "an", "some", "with", "all", "there", 
+				"10", "20", "30", "40", "50", "her", "him", "she", "he", "when", "where", "soon", "lead", "now", 
+				"girl", "boy", "man", "woman", "girls", "boys", "men", "women", "child", "children", "look", "looked",
+				"vote", "run", "drive", "attend", "battle", "do", "does", "make", "makes", "say", "says", "think", "thinks", "love", "loves",
+				"election", "norad", "fruit", "studio", "shoulder", "deep", "daisies", "foundation", "home", "home", "house", "bar", "restaurant", 
+				"you", "cars", "whiskey", "vodka", "leader", "new", "cats", "see", "south", "cattle", "up", "down", "ok", "okay", 
+				"nuptials", "park", "today", "reception", "satan's", "submarines", "florida", "border", "eat", "eats", "drink", "drinks",
+				"safety", "protein", "sun", "safety", "strange", "land", "vodka", "orange", "leaves", "breathless", "sweet", "good", 
+				"food", "welcome", "composition", "cheese", "live", "cottage", "people", "me", "you", "i"];
+
+    let dictionary = [];
+
+    let wordContainer;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        start();
+    });
+
+    async function start() {
+        buildWordList();
+
+        $("#reset").click(clearTheRefrigerator);
+    }
+
+    async function buildWordList() {
+        wordContainer = document.getElementById("word-list");
+
+        for (var i = wordList.length - 1; i >= 0; i--) {
+            let url = `/magic/data/terms/${wordList[i]}?size=1`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                fragmentCoords = data[0].selectors[0].value.replace("xywh=","");
+                iiifImageFragment = data[0].target.replace("full/full", fragmentCoords + "/full");
+                vertices = fragmentCoords.split(",");
+                data[0].vertices = {};
+                data[0].vertices.x = vertices[0];
+                data[0].vertices.y = vertices[1];
+
+                dictionary[data[0].id] = data[0];
+
+                let i = document.createElement("img");
+                i.id = data[0].id;
+                i.className = "draggable magnetic-word";
+                i.style = "padding:2px";
+                i.src = iiifImageFragment;
+                i.setAttribute("alt", data[0].body);
+                i.ondblclick = showFullImage;
+
+                wordContainer.appendChild(i);
+            }
+        }
+
+        interact('.draggable').draggable({onmove: dragMoveListener});
+    }
+
+	function clearTheRefrigerator() {
+        {{!-- let poem = document.getElementsByTagName('img').filter( e => {e.data.x && e.data.x != 0} ) --}}
+
+		let poem = $("img").filter(function() {return $(this).attr("data-x") && $(this).attr("data-x") != 0;});
+        anime({
+            targets: [poem.toArray()],
+            translateX: 0,
+            translateY: 0,
+            easing: 'easeOutExpo'
+        })
+        .set(
+            [poem.toArray()],
+            {
+                'data-x': 0, 
+                'data-y':0
+            }
+        );
+
+		$(".full-image").remove();
+	}
+
+    async function showFullImage(e) {
+        let rect = e.target.getBoundingClientRect();
+        let pos = { 
+                top: rect.top + window.scrollY, 
+                left: rect.left + window.scrollX, 
+            };
+        let id = e.target.id;
+        let word = dictionary[id];
+
+		let x = pos.left - (word.vertices.x);
+		let y = pos.top - (word.vertices.y);
+
+        let url = `/magic/data/images/${word.imageid}/objects?size=1`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Build the container to hold the object 
+		let container = document.createElement("div");
+        container.style = `z-index: 100000; position: absolute; top: ${y}px; left: ${x}px`;
+        container.classList.add("draggable", "full-image");
+		container.ondblclick = (function() {$(this).remove();});
+
+		// Build the image
+		let fullImage = document.createElement("img");
+        fullImage.src = word.target;
+		
+        container.appendChild(fullImage);
+
+		// Build the object info panel
+		let infoPanel = document.createElement("div");
+		infoPanel.classList.add("info-panel", "container");
+
+        let description = `It's a ${data.records[0].worktypes[0].worktype} titled ${data.records[0].title}.<br/>`;
+        let link = document.createElement("a");
+        link.href = data.records[0].url;
+        link.target = "_blank";
+        link.innerHTML = "Read more about it.";
+        
+        infoPanel.innerHTML = description;
+        infoPanel.append(link);
+        
+        container.appendChild(infoPanel);
+        
+        document.body.appendChild(container);
+
+        interact('.draggable').draggable({onmove: dragMoveListener});
+    }
+
+    function dragMoveListener (e) {
+        var target = e.target,
+        // keep the dragged position in the data-x/data-y attributes
+        x = (parseFloat(target.getAttribute('data-x')) || 0) + e.dx,
+        y = (parseFloat(target.getAttribute('data-y')) || 0) + e.dy;
+
+        // translate the element
+        target.style.webkitTransform =
+        target.style.transform = `translateX(${x}px) translateY(${y}px)`;
+
+        // update the posiion attributes
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+    }
+</script>

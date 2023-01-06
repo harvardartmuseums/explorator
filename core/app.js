@@ -13,6 +13,7 @@ var sketchbooks = require('../sketchbooks/app');
 var images = require('../images/app');
 var color = require('../color/app');
 var exhibitions = require('../exhibitions/app');
+var magic = require('../magic/app');
 
 var app = express();
 
@@ -36,6 +37,7 @@ app.use('/sketchbooks', sketchbooks);
 app.use('/images', images);
 app.use('/color', color);
 app.use('/exhibitions', exhibitions);
+app.use('/magic', magic);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
