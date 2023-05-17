@@ -41,6 +41,20 @@
         HAM ID: <a href="{{person.url}}">{{person.id}}</a>
     </div>
 
+    <h3>Exhibitions</h3>
+    <div>
+        <p>{{person.exhibitioncount}} exhibitions are associated with {{person.displayname}}.</p>
+
+        {{#if person.exhibitions}}
+            <p>Here's a sample of the latest exhibitions.</p>
+            <ol>
+            {{#person.exhibitions}}
+                <li><a href="{{url}}">{{title}}</a>, {{begindate}} - {{enddate}}</li>
+            {{/person.exhibitions}}
+            </ol>
+        {{/if}}
+    </div>
+
     <h3>Objects</h3>
     <div>
         <p>{{person.objectcount}} objects are associated with {{person.displayname}}. They are viewable on <a href="{{person.url}}">Harvard Art Museums website</a>.</p>
