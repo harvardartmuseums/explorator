@@ -42,7 +42,7 @@
     </div>
 
     <h3>Exhibitions</h3>
-    <div>
+    <div class="pb-4">
         <p>{{person.exhibitioncount}} exhibitions are associated with {{person.displayname}}.</p>
 
         {{#if person.exhibitions}}
@@ -55,8 +55,22 @@
         {{/if}}
     </div>
 
+    <h3>Publications</h3>
+    <div class="pb-4">
+        <p>{{person.publicationcount}} publications are associated with {{person.displayname}}.</p>
+
+        {{#if person.publications}}
+            <p>Here's a sample of the latest publications.</p>
+            <ol>
+            {{#person.publications}}
+                <li>{{{citation}}}</li>
+            {{/person.publications}}
+            </ol>
+        {{/if}}
+    </div>
+
     <h3>Objects</h3>
-    <div>
+    <div class="pb-4">
         <p>{{person.objectcount}} objects are associated with {{person.displayname}}. They are viewable on <a href="{{person.url}}">Harvard Art Museums website</a>.</p>
 
         {{#if person.objects}}

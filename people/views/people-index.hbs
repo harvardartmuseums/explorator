@@ -74,11 +74,15 @@
 <script>
 
 	document.addEventListener("DOMContentLoaded", function() {
+		$("#personname").val(window.location.hash);
+
 		$("#search-people-button").on("click", function() {
+			window.location.hash = $("#personname").val();
 			fillPeople();
 		});
 
 		$("#reset-search-criteria").on("click", function() {
+			window.location.hash = '';
 			$("#personname").val('');
 			fillPeople();
 		});
