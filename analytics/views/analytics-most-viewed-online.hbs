@@ -112,7 +112,7 @@
 						}
 					};
 					
-					var baseURL = "/data/activity";
+					var baseURL = "/data/activities";
 					var urlParameters = "?&size=0&type=pageviews&aggregation=" + JSON.stringify(agg);
 					var exclude = [];
 
@@ -128,7 +128,7 @@
 
 								if (exclude.indexOf(o.key) < 0) {
 									requests.push(
-										$.getJSON('/data/object/' + o.key).done(function(details){
+										$.getJSON('/data/objects/' + o.key).done(function(details){
 											o.details = details;
 											if (details.primaryimageurl === null) {
 												o.details.primaryimageurl = '/images/Image-Unavailable-100x100.jpg';
@@ -163,7 +163,7 @@
 				}
 
 				function renderObjectDetails(objectId) {
-					$.getJSON(`/data/object/${objectId}`, data => {
+					$.getJSON(`/data/objects/${objectId}`, data => {
 						var objectDetailsTemplate = $('#object-details-template').html();
 						var content = Mustache.to_html(objectDetailsTemplate, data);
 
@@ -233,7 +233,7 @@
 							}
 						}
 					};
-					var baseURL = '/data/activity'
+					var baseURL = '/data/activities'
 					var urlParameters = `?size=0&object=${objectId}&aggregation=${JSON.stringify(agg)}`;
 
 					var graphWidth = width + margin.left + margin.right;

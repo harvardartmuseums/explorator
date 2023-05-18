@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var HAM = require('../../modules/ham');
 
 /* GET most viewed online page. */
 router.get('/', function(req, res, next) {

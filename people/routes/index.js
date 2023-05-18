@@ -1,6 +1,7 @@
-var express = require('express');
-var router = express.Router();
-var HAM = require('../../modules/ham');
+var router = require("express-promise-router")();
+var ham = require('@harvardartmuseums/ham');
+
+let HAM = new ham(process.env.apikey);
 
 /* GET most viewed online page. */
 router.get('/', function(req, res, next) {

@@ -1,7 +1,7 @@
-const { json } = require('body-parser');
-var express = require('express');
-var router = express.Router();
-var HAM = require('../../modules/ham');
+var router = require("express-promise-router")();
+var ham = require('@harvardartmuseums/ham');
+
+let HAM = new ham(process.env.apikey);
 
 /* GET the main image page. */
 router.get('/', function(req, res, next) {
@@ -13,7 +13,7 @@ router.get('/poetry', function(req, res, next) {
     res.render('poetry', {layout: '../../core/views/layout.hbs', title: 'Magnetic Poetry | Magic | Explorator | Harvard Art Museums'});
 });
 
-router.get('/data/terms/:term', function(req, res, next) {
+router.get('/data/terms/:term', async function(req, res, next) {
   let term = req.params.term;
   let criteria = {
     q: "type:text AND body:" + term,
@@ -21,18 +21,17 @@ router.get('/data/terms/:term', function(req, res, next) {
     sort: "random",
     size: req.query.size || 25
   }
-  HAM.Annotations.search(criteria)
-     .then(data => {
-        let terms = [];
+  
+  let annotations = await HAM.Annotations.search(criteria);
+  let terms = [];
 
-        data.records.forEach(d => {
-          if (d.body.toUpperCase() === term.toUpperCase()) {
-            terms.push(d);
-          }
-        });
+  annotations.records.forEach(d => {
+    if (d.body.toUpperCase() === term.toUpperCase()) {
+      terms.push(d);
+    }
+  });
 
-        res.json(terms);
-     });
+  res.json(terms);
 });
 
 router.get('/data/images/:imageid/objects', function(req, res, next) {

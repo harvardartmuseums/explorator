@@ -1,53 +1,35 @@
-var request = require('request');
-var express = require('express');
 var apicache = require('apicache');
-var router = express.Router();
+var router = require("express-promise-router")();
+var ham = require('@harvardartmuseums/ham');
+
+let HAM = new ham(process.env.apikey);
 
 var cache = apicache.middleware;
 
 var apikey = process.env.APIKEY;
 var apiURL = "https://api.harvardartmuseums.org";
 
-router.get('/:endpoint', cache('12 hours'), function(req, res, next) {
-	var url = apiURL;
-	var endpoint = req.params.endpoint;
-    var qs = {
-        apikey: apikey
+router.get('/:endpoint', cache('12 hours'), async function(req, res, next) {
+    let qs = {
+        parameters: {},
+        aggregations: {}
     };
 
     for (var param in req.query) {
-        qs[param] = req.query[param];
+        if (param == 'aggregation') {
+            qs.aggregations = JSON.parse(req.query[param]);
+        } else {
+            qs.parameters[param] = req.query[param];
+        }
     }
 
-    url += "/" + endpoint;
-
-    request(url, {
-			qs: qs
-		}, function(error, response, body) {
-			var r = JSON.parse(body);
-
-			res.send(r);
-		});
-
+    let results = await HAM.search(req.params.endpoint, qs.parameters, qs.aggregations);
+    res.json(results);
 });
 
-router.get('/:endpoint/:itemid', cache('12 hours'), function(req, res, next) {
-	var url = apiURL;
-    var itemid = req.params.itemid;
-    var endpoint = req.params.endpoint;
-
-	url += "/" + endpoint + "/" + itemid;
-
-	request(url, {
-			qs: {
-				apikey: apikey
-			}
-		}, function(error, response, body) {
-			var r = JSON.parse(body);
-
-			res.send(r);
-		});
-
+router.get('/:endpoint/:id', cache('12 hours'), async function(req, res, next) {
+    let results = await HAM.get(req.params.endpoint, req.params.id);
+    res.json(results);
 });
 
 module.exports = router;
