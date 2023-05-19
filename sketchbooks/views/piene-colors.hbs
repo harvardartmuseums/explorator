@@ -136,14 +136,14 @@
     // the given field/value search, and updates the 
     // explorer accordingly
     async function getObjects(o) {
-        let urlSketchbook = `/data/object?objectnumber=${o.ObjectNumber}&person=28069&size=1`; 
+        let urlSketchbook = `/data/objects?objectnumber=${o.ObjectNumber}&person=28069&size=1`; 
         const data = await fetch(urlSketchbook).then(response => response.json());
         let sketchbook = data.records[0];
 
         if (o.HasChildren == 0) {
-            urlPages = `/data/image?q=id:(>=${o.ImageIDMin}%20AND%20<=${o.ImageIDMax})&size=100&sort=id&sortorder=asc`; 
+            urlPages = `/data/images?q=id:(>=${o.ImageIDMin}%20AND%20<=${o.ImageIDMax})&size=100&sort=id&sortorder=asc`; 
         } else {
-            urlPages = `/data/object?objectnumber=${o.ObjectNumber}.*&fields=primaryimageurl,objectnumber,date,title,colors&size=100&sort=id&sortorder=asc`; 
+            urlPages = `/data/objects?objectnumber=${o.ObjectNumber}.*&fields=primaryimageurl,objectnumber,date,title,colors&size=100&sort=id&sortorder=asc`; 
         }
 
         let results = await fetch(urlPages).then(response => response.json());
