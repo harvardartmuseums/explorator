@@ -1,0 +1,60 @@
+<header class="jumbotron grey lighten-4">
+    <h1>Exhibition Explorer</h1>
+    <p class="lead"></p>
+</header>
+
+<div class="container-fluid p-4">
+     <h2><u>{{exhibition.title}}</u></h2>
+
+    {{exhibition.begindate}} - {{exhibition.enddate}}
+
+    <div class="pb-3">
+    {{#exhibition.people}}
+        <p>{{displayname}}</p>
+    {{/exhibition.people}}
+    </div>
+    
+    <h3>Venues</h3>
+    <div class="pb-4">
+    {{#exhibition.venues}}
+        <div>
+            {{fullname}}, {{begindate}} - {{enddate}}
+        </div>
+    {{/exhibition.venues}}
+    </div>
+    
+    {{{exhibition.htmldescription}}}
+    
+    <hr>
+
+    <h3>Images</h3>
+    <div class="pb-4">
+    {{#exhibition.images}}
+        <div class="media pe-4">
+            <img src="{{iiifbaseuri}}/full/!200,200/0/default.jpg">
+            <div class="media-body p-4">
+                {{caption}}
+            </div>
+        </div>
+    {{/exhibition.images}}
+    </div>
+
+    <h3>Videos</h3>
+    <div class="pb-4">
+    {{#exhibition.videos}}
+        <p><a href="{{primaryurl}}">{{description}}</a></p>
+    {{/exhibition.videos}}
+    </div>
+
+    <h3>Objects</h3>
+    <div class="pb-4">
+        <p>{{exhibition.objectcount}} objects are associated with the exhibition. They are viewable on <a href="{{exhibition.url}}">Harvard Art Museums website</a>.</p>
+
+        {{#if exhibition.objects}}
+            <p>Here's a sample.</p>
+            {{#exhibition.objects}}
+                <a href="{{url}}"><img class="img-thumbnail float-start" src="{{images.[0].iiifbaseuri}}/full/,150/0/default.jpg"></a>
+            {{/exhibition.objects}}
+        {{/if}}
+    </div>
+</div>

@@ -20,7 +20,7 @@
         let events = await data.json();
         timeline = new TL.Timeline('timeline-embed',
             {events: events},
-            {timenav_height_percentage: 50}
+            {timenav_height_percentage: 50,hash_bookmark:true}
         );  
     }
 </script>
