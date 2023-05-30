@@ -1,0 +1,230 @@
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-format@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-time@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-time-format@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+
+<header class="jumbotron grey lighten-4">
+    <h1>Building Explorer</h1>
+    <p class="lead">Stay awhile. Stay forever.</p>
+</header>
+
+<section x-data="dataviz">            
+    <div x-show="isLoading" x-text="statusMessage"></div>
+    <div id="museum"></div>
+</section>
+
+<footer class="page-footer grey darken-1 font-small p-3">
+    <div class="container-responsive text-left">This page shows a near realtime view of the 1,600 objects currently on view in the Harvard Art Museums.</div>
+</footer>
+
+<script>
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('dataviz', () => ({    
+            museum: {"name": "Harvard Art Museums", "children": []},
+            isLoading: false,
+            statusMessage: 'Loading...',
+            layoutType: '',
+			margin: {top: 50, right: 120, bottom: 50, left: 160},
+			width: 0,
+			height: 0,
+
+            async init() {
+				this.width = window.innerWidth - this.margin.right - this.margin.left;
+				this.height = window.innerHeight - this.margin.top - this.margin.bottom;
+
+                this.isLoading = true;
+                
+                let baseURL = '/data/galleries?size=100&sort=gallerynumber';
+
+                this.statusMessage = 'Building the Lower Level';
+                let level0 = await fetch(baseURL + '&floor=0')
+                    level0 = await level0.json();
+                level0.records.forEach(this.prepareRoom);
+                this.museum.children[0] = {"name": "Lower Level"};
+                this.museum.children[0].children = level0.records;
+
+                this.statusMessage = 'Building the Level 1';
+                let level1 = await fetch(baseURL + '&floor=1');
+                    level1 = await level1.json();
+                level1.records.forEach(this.prepareRoom);
+                this.museum.children[1] = {"name": "Level 1"};
+                this.museum.children[1].children = level1.records;                    
+
+                this.statusMessage = 'Building the Level 2';
+                let level2 = await fetch(baseURL + '&floor=2');
+                    level2 = await level2.json();
+                level2.records.forEach(this.prepareRoom);
+                this.museum.children[2] = {"name": "Level 2"};
+                this.museum.children[2].children = level2.records;                    
+
+                this.statusMessage = 'Building the Level 3';
+                let level3 = await fetch(baseURL + '&floor=3');
+                    level3 = await level3.json();
+                level3.records.forEach(this.prepareRoom);
+                this.museum.children[3] = {"name": "Level 3"};
+                this.museum.children[3].children = level3.records;                    
+
+                this.statusMessage = 'Building the Level 4';
+                let level4 = await fetch(baseURL + '&floor=4');
+                    level4 = await level4.json();
+                level4.records.forEach(this.prepareRoom);
+                this.museum.children[4] = {"name": "Level 4"};
+                this.museum.children[4].children = level4.records;                    
+
+                this.statusMessage = 'Building the Level 5';
+                let level5 = await fetch(baseURL + '&floor=5');
+                    level5 = await level5.json();
+                level5.records.forEach(this.prepareRoom);
+                this.museum.children[5] = {"name": "Level 5"};
+                this.museum.children[5].children = level5.records;
+
+                this.isLoading = false;
+
+                this.packLayout();
+            },
+
+            async prepareRoom(d) {
+                let baseURL = '/data/objects';
+                let urlParameters = new URLSearchParams({
+                                            size: 100,
+                                            gallery: d.gallerynumber,  
+                                            sort: 'gallery.gallerynumber', 
+                                            fields: 'objectnumber,objectid,title,dated,url,primaryimageurl,classification,gallery'
+                                        });				
+
+                let art = await fetch(`${baseURL}?${urlParameters.toString()}`);
+                    art = await art.json();
+                d.objectcount = art.info.totalrecords;	
+                d.children = art.records;
+
+                for (var i = art.records.length - 1; i >= 0; i--) {
+                    dt1 = new Date(art.records[i].gallery.begindate);
+                    dt2 = new Date();
+                    var age = Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate()) ) /(1000 * 60 * 60 * 24));
+                    art.records[i].gallery.age = age;
+                }
+
+                if (d.id) {
+                    delete d.id;
+                }
+            },
+
+            packLayout() {
+				this.layoutType = "pack";
+						
+				//See https://github.com/mbostock/d3/wiki/Pack-Layout
+				//See http://mbostock.github.io/d3/talk/20111018/#22
+				//http://bl.ocks.org/mbostock/4063530
+				//http://bl.ocks.org/mbostock/4063269
+	    
+				var w = this.width + this.margin.right + this.margin.left,
+				    h = this.height + this.margin.top + this.margin.bottom,
+				    r = this.height,
+				    x = d3.scaleLinear().range([0, r]),
+				    y = d3.scaleLinear().range([0, r]),
+				    node,
+				    root;
+
+			    let colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+				var pack = d3.pack()
+				    .size([r, r]);
+
+				var vis = d3.select("#museum").append("svg")
+				    .attr("width", this.width + this.margin.right + this.margin.left)
+				    .attr("height", this.height + this.margin.top + this.margin.bottom)
+				    .on("click", function() { zoom(root); })
+				  .append("g")
+				    .attr("transform", "translate(" + (w - r) / 2 + "," + (h - r) / 2 + ")");
+
+				node = root = d3.hierarchy(JSON.parse(JSON.stringify(this.museum)))
+                    .sum(d => 10)
+                    .sort((a,b) => b.value - a.value);
+
+				var nodes = pack(root);
+
+				vis.selectAll("circle")
+				  .data(nodes.descendants())
+				.enter().append("circle")
+				  .attr("class", function(d) { return d.children ? "parent" : "child"; })
+				  .attr("cx", function(d) { return d.x; })
+				  .attr("cy", function(d) { return d.y; })
+				  .attr("r", function(d) { return d.r; })
+                  .style("stroke", "#999")
+				  .style("fill", function(d) {return d.data.classification ? colors(d.data.classification) : "#ffffff"; })
+				  .on("click", function(d) { return zoom(node == d ? root : d); });
+                
+
+				vis.selectAll("text")
+				  .data(nodes.descendants())
+				.enter().append("text")
+				  .attr("class", function(d) { return d.children ? "parent" : "child"; })
+				  .attr("x", function(d) { return d.x; })
+				  .attr("y", function(d) { return d.y; })
+				  .attr("dy", ".35em")
+				  .attr("text-anchor", "middle")
+				  .style("opacity", function(d) { return d.r > 20 ? 1 : 0; })
+				  .style("display", function(d) { return d.parent === root ? "inline" : "none"})
+				  .text(function(d) { return d.data.gallerynumber ? d.data.name + ' (' + d.data.gallerynumber + ')' : d.data.objectnumber ? d.data.classification : d.data.name; })
+				  .on("click", function(d) { return zoom(node == d ? root : d); });
+
+				function reset() {
+					{{!-- filterSelection = {
+						"classification": [],
+						"age": 9999999
+					};
+					
+					// reset all of the interest buttons
+					$(".interest-button").removeClass("button-on");
+					$("#age-filters").prop('selectedIndex',0);
+					
+					// reset the display
+					d3.selectAll("#museum circle.child")
+						.style("opacity", 0.2); --}}
+				}
+
+				function zoom(d, i) {
+				  {{!-- updateInfoPanel(d); --}}
+
+				  var focus = d;
+
+				  //Zoom up until the second last depth
+				  if (focus.children) {
+					  var k = r / d.r / 2;
+					  x.domain([d.x - d.r, d.x + d.r]);
+					  y.domain([d.y - d.r, d.y + d.r]);
+
+					  var t = vis.transition()
+					      .duration(d3.event.altKey ? 7500 : 750);
+
+					  t.selectAll("circle")
+					      .attr("cx", function(d) { return x(d.x); })
+					      .attr("cy", function(d) { return y(d.y); })
+					      .attr("r", function(d) { return k * d.r; });
+
+					  t.selectAll("circle.child")
+					  	  .attr("class", function(d) { return (d.parent ===focus && focus.depth == 2) ? "child on" : "child"; });
+
+					  t.selectAll("text")
+					      .attr("x", function(d) { return x(d.x); })
+					      .attr("y", function(d) { return y(d.y); })
+					      .style("display", function(d) { return d.parent === focus ? "inline" : "none"})
+					      .style("opacity", function(d) { return k * d.r > 20 ? 1 : 0; });
+				  }
+
+				  //Keep track of the selected node
+				  node = d;
+				  d3.event.stopPropagation();
+				}			
+			}            
+        }))
+    })
+
+
+</script>
