@@ -21,21 +21,21 @@
 </footer>
 
 <style type="text/css">
-	.highlight-all-0 {background: #ffffff;}
-	.highlight-all-1 {background: #eeeeee;}
-	.highlight-all-2 {background: #dddddd;}
-	.highlight-all-3 {background: #cccccc;}
-	.highlight-all-4 {background: #bbbbbb;}
-	.highlight-all-5 {background: #aaaaaa;}
-	.highlight-all-6 {background: #999999;}
-	.highlight-all-7 {background: #888888;}
-	.highlight-all-8 {background: #777777;}
-	.highlight-all-9 {background: #666666;}
-	.highlight-all-10 {background: #555555;}
-	.highlight-all-11 {background: #444444;}
-	.highlight-all-12 {background: #333333;} 
-	.highlight-all-13 {background: #222222;} 
-	.highlight-all-14 {background: #111111;} 
+	.highlight-0 {background: #ffffff;}
+	.highlight-1 {background: #eeeeee;}
+	.highlight-2 {background: #dddddd;}
+	.highlight-3 {background: #cccccc;}
+	.highlight-4 {background: #bbbbbb;}
+	.highlight-5 {background: #aaaaaa;}
+	.highlight-6 {background: #999999;}
+	.highlight-7 {background: #888888;}
+	.highlight-8 {background: #777777;}
+	.highlight-9 {background: #666666;}
+	.highlight-10 {background: #555555;}
+	.highlight-11 {background: #444444;}
+	.highlight-12 {background: #333333;} 
+	.highlight-13 {background: #222222;} 
+	.highlight-14 {background: #111111;} 
 
 	/*Activity graph*/
 	.axis path, .axis line {
@@ -48,7 +48,7 @@
 
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script id="year-template" type="text/template">
-	<div class="d-flex overflow-hidden p-2 highlight-all-\{{index}}" id="\{{key_as_string}}">
+	<div class="d-flex overflow-hidden p-2 highlight-\{{index}}" id="\{{key_as_string}}">
 		<span class="pr-4 float-left">
 			<h2>\{{key_as_string}}</h2>
 		</span>
@@ -94,6 +94,7 @@
 	var panel;
 	var body;
 	var maxYear = new Date().getFullYear();
+	var maxItems = 20;
 
 	document.addEventListener("DOMContentLoaded", function() {
 		panel = $("#object-details-panel");
@@ -110,53 +111,59 @@
 	});
 
 	async function fillYears() {
-		var agg = {
-			"by_year": {
-				"date_histogram": {
-					"field": "date",
-					"interval": "year",
-					"format": "yyy",
-					"min_doc_count": 0,
-					"extended_bounds": {
-						"min": "2009",
-						"max": maxYear.toString()
-					},
-					"order": {"_key": "desc"}
-				},
-				"aggs": {
-					"by_object": {
-						"terms": {
-							"field": "objectid",
-							"size": 20, 
-							"order": {"totals": "desc"}
+		let aggs = {
+				"by_year": {
+					"date_histogram": {
+						"field": "date",
+						"interval": "year",
+						"format": "yyy",
+						"min_doc_count": 0,
+						"extended_bounds": {
+							"min": "2009",
+							"max": maxYear.toString()
 						},
-						"aggs": {
-							"totals": {
-								"sum": {
-									"field": "activitycount"
+						"order": {"_key": "desc"}
+					},
+					"aggs": {
+						"by_object": {
+							"terms": {
+								"field": "objectid",
+								"size": maxItems, 
+								"order": {"totals": "desc"}
+							},
+							"aggs": {
+								"totals": {
+									"sum": {
+										"field": "activitycount"
+									}
 								}
 							}
 						}
 					}
 				}
-			}
-		};
+			};
+
+		let params = new URLSearchParams({
+			size: 0,
+			type: "pageviews",
+			fields: "title,primaryimageurl,images,objectid",
+			aggregation: JSON.stringify(aggs)
+		});
 		
-		var baseURL = "/data/activities";
-		var urlParameters = "?&size=0&type=pageviews&aggregation=" + JSON.stringify(agg);
-		var exclude = [];
+		let url = `/data/activities?${params.toString()}`;				
+		let data = await fetch(url).then(r => r.json());		
 
-		let data = await fetch(baseURL + urlParameters).then(r => r.json());		
-		var years = data.aggregations.by_year.buckets;
-
+		let years = data.aggregations.by_year.buckets;
 		for (let d of years) {
-			var requests = [];
-			var results = [];
-
 			d.index = new Date().getFullYear() - d.key_as_string;
+
+			let idList = d.by_object.buckets.map(o => o.key).join("|");
+			let objectDetails = await fetch(`/data/objects?id=${idList}&sort=totalpageviews&sortorder=desc&size=${maxItems}`).then(r => r.json());
+
 			for (let o of d.by_object.buckets) {
-				if (exclude.indexOf(o.key) < 0) {
-					let details = await fetch(`/data/objects/${o.key}`).then(r => r.json());
+				let i = _.findIndex(objectDetails.records, r => r.id == o.key);
+				if (i > -1) {
+					details = objectDetails.records[i];
 
 					o.details = details;
 					if (details.primaryimageurl === null) {
@@ -165,17 +172,17 @@
 				}
 			}
 
-			renderYear(d);
-
-			$(".list-item").click(function() {
-				$("li img").attr("style", "opacity:1.0");
-
-				var objectID = $(this).data("object-id");
-				$("li:not([data-object-id='" + objectID + "']) img").attr("style", "opacity:0.3");
-
-				renderObjectDetails(objectID);
-			});										
+			renderYear(d);									
 		}
+
+		$(".list-item").click(function() {
+			$("li img").attr("style", "opacity:1.0");
+
+			var objectID = $(this).data("object-id");
+			$(`li:not([data-object-id='${objectID}']) img`).attr("style", "opacity:0.3");
+
+			renderObjectDetails(objectID);
+		});			
 	}
 
 	function renderYear(data) {
@@ -252,8 +259,12 @@
 				}
 			}
 		};
-		var baseURL = '/data/activities'
-		var urlParameters = `?size=0&object=${objectId}&aggregation=${JSON.stringify(agg)}`;
+		var params = new URLSearchParams({
+			size: 0,
+			object: objectId,
+			aggregation: JSON.stringify(agg)
+		});
+		var url = `/data/activities?${params.toString()}`;
 
 		var graphWidth = width + margin.left + margin.right;
 		var graphHeight = height + margin.top + margin.bottom;
@@ -264,7 +275,7 @@
 			.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		d3.json(baseURL + urlParameters).then(function(data) {
+		d3.json(url).then(function(data) {
 			data = data.aggregations.activities;
 
 			color.domain(d3.keys(data.buckets));
@@ -363,11 +374,6 @@
 						dataGrid.select("span.metric-" + d.name)
 							.text(d.values[itemNumber].totalcount);
 					});
-
-					// focus.select("text.y1")
-				//           .attr("transform",
-				//                 "translate(" + d3.mouse(this)[0] + ",0)")
-				//           .text(t);								
 				});					        			    	
 		});			
 	}
