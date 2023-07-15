@@ -41,6 +41,17 @@
         HAM ID: <a href="{{person.url}}">{{person.id}}</a>
     </div>
 
+    <h3>Roles</h3>
+    <div class="pb-4">
+        {{#if person.roles}}
+            <ul>
+            {{#person.roles}}
+                <li>{{role}}, {{context}}, {{frequency}}</li>
+            {{/person.roles}}
+            </ul>
+        {{/if}}
+    </div>
+
     <h3>Exhibitions</h3>
     <div class="pb-4">
         <p>{{person.exhibitioncount}} exhibitions are associated with {{person.displayname}}.</p>
