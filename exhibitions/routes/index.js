@@ -8,7 +8,12 @@ router.get('/', function(req, res, next) {
   res.render('index', {layout: '../../core/views/layout.hbs', title: 'Exhibition Explorer | Explorator | Harvard Art Museums' });
 });
 
-  /* GET the exhibition timeline page. */
+  /* GET the exhibition browse page. */
+router.get('/browse', function(req, res, next) {
+    res.render('browse', {layout: '../../core/views/layout.hbs', title: 'Browse | Exhibition Explorer | Explorator | Harvard Art Museums'});
+});
+
+/* GET the exhibition timeline page. */
 router.get('/timeline', function(req, res, next) {
     res.render('timeline', {layout: '../../core/views/layout.hbs', title: 'Timeline | Exhibition Explorer | Explorator | Harvard Art Museums'});
 });

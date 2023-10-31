@@ -1,0 +1,145 @@
+<header class="jumbotron grey lighten-4">
+	<h1>Exhibition Explorer</h1>
+	<p class="lead">Search for exhibition related to the Harvard Art Museums collections</p>
+</header>
+
+<div class="container-fluid p-4">
+	<div class="pb-2">
+		<label>Title</label> <input type="text" id="title" value=""></input>
+        <label>HAM venues only</label> <input type="checkbox" id="filter-venue" value=""></input>
+		<button type="button" class="btn btn-primary" id="search-exhibitions-button">Filter</button>
+		<button type="button" class="btn btn-light" id="reset-search-criteria">Clear</button>
+		<span id="info" class="body"></span>
+	</div>
+	<div id="paginator"></div>
+		
+	<div id="loader">
+		Fetching some exhibitions just for you <img src="/images/ajax-loader.gif" height="25">
+	</div>
+	<div id="exhibitions" class="container-fluid p-0"></div>
+</div>
+
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="info-panel">
+		<span id="counter">Enter a name and click the "Filter" button</span>
+	</div>
+</footer>
+
+<script id="exhibitions-template" type="text/template">
+	<ul class="list-unstyled">
+	\{{#records}}	
+		<li>
+		<div data-exhibition-id="\{{id}}">
+			<p>
+				<h5><a href="\{{id}}">\{{title}}</a></h5>
+
+                \{{#if begindate}}
+				<div class="pb-4">
+                    <h6>Dates</h6>
+                        \{{begindate}} - \{{enddate}} 
+                </div>
+                \{{/if}}  
+    
+                \{{#if venues}} 
+                    <h6>Venues</h6>
+                    \{{#each venues}}
+                        <div>\{{fullname}}, \{{begindate}} - \{{enddate}}</div>
+                    \{{/each}}
+                \{{/if}}
+            </p>
+			{{!-- <p>\{{objectcount}} objects are associated with \{{title}}. </p> --}}
+			<hr>
+		</div>
+		</li>
+	\{{/records}}
+	</ul>
+</script>	
+<script id="info-template" type="text/template">
+	\{{totalrecords}} exhibitions 
+</script>
+<script id="related-objects-template" type="text/template">
+	<div>
+		\{{#records}}
+			<div style="position:relative;float:left;height:100px;margin:2px;">
+				<a href="\{{url}}" target="_blank"><img src="\{{primaryimageurl}}?height=100"></a>
+			</div>
+		\{{/records}}
+	</div>
+	<div style="clear:both;"></div>
+</script>
+
+<script>
+    let venueFilter = '';
+
+	document.addEventListener("DOMContentLoaded", function() {
+		$("#title").val(window.location.hash);
+
+        $("#filter-venue").on("click", function(e) {
+            if (e.target.checked) {
+                venueFilter = 'HAM';
+            } else {
+                venueFilter = '';
+            }
+            fillExhibitions();
+        });
+
+		$("#search-exhibitions-button").on("click", function() {
+			window.location.hash = $("#title").val();
+			fillExhibitions();
+		});
+
+		$("#reset-search-criteria").on("click", function() {
+			window.location.hash = '';
+			$("#title").val('');
+			fillExhibitions();
+		});
+
+		fillExhibitions();
+	});
+
+
+	function fillExhibitions() {
+		var title = $("#title").val() || '*';
+		var urlBase = '/data/exhibitions';
+		var urlParameters = {
+			q: `title:${title}`,
+			sort: `chronological`,
+            venue: venueFilter
+		};
+		var url = `${urlBase}?${$.param(urlParameters)}`;
+
+		let exhibitionsSource = $('#exhibitions-template').html();
+		let exhibitionsTemplate = Handlebars.compile(exhibitionsSource);
+		
+		let infoSource = $('#info-template').html();
+		let infoTemplate = Handlebars.compile(infoSource);
+		
+		$("#paginator").pagination({
+			dataSource: url,
+			locator: "records",
+			pageSize: 50,
+			alias: {
+				pageNumber: "page",
+				pageSize: "size"
+			},
+			totalNumberLocator: function(response) {
+				return response.info.totalrecords;
+			},
+			beforePaging: function() {
+				$('#exhibitions').html('');
+				$("#loader").show();
+			},
+			callback: function(data, pagination) {
+				let info;
+				
+				info = infoTemplate({totalrecords: pagination.totalNumber});
+				$('#info').html(info);
+
+				info = exhibitionsTemplate({records: data});
+				$('#exhibitions').html(info);
+				
+				$("#loader").hide();
+			}
+		})
+	}			
+</script>
