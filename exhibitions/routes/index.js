@@ -25,6 +25,11 @@ router.get('/data/timeline', async function(req, res, next) {
     sortorder: "desc",
     size: 100
   }
+
+  if (req.query.start) {
+    criteria.before = req.query.end;
+    criteria.after = req.query.start;
+  }
   let exhibitions = await HAM.Exhibitions.search(criteria);
      
   let events = [];

@@ -3,20 +3,47 @@
 
 <header class="jumbotron grey lighten-4">
     <h1>Exhibition Timeline</h1>
-    <p class="lead"></p>
+    <p class="lead">Browse and filter the chronological list of exhibitions at HAM</p>
 </header>
 
 <div class="container-fluid p-0">
+    <div class="d-flex justify-content-center my-2 m-2">
+    <label class="m-2" for="year-span">Span of Years (<span id="years">2023</span> ±10)</label>
+    </div>
+    <div class="d-flex justify-content-center my-2 m-2">
+        <span class="font-weight-bold black-text mr-2">1900</span>
+        <form class="range-field w-50">
+            <input type="range" min="1900" max="2023" value="2023" class="border-0 custom-range" id="year-range">
+        </form>
+        <span class="font-weight-bold black-text ml-2">2023</span>
+    </div>	
+    <hr>
     <div id='timeline-embed' style="height: 600px"></div>
 </div>    
 
 <script>
     let timeline;
+    let years = {
+        start: '2013',
+        end: '2033'
+    }
 
     start();
 
-    async function start() {
-        let data = await fetch('/exhibitions/data/timeline');
+    $("#year-range").on("change", function(e) {
+		$("#years").text($(this).val());
+
+        let year = Number($(this).val());
+        years.start = year - 10;
+        years.end = year + 10;
+
+        start(years);
+	});
+
+    async function start(years) {
+        let qs = new URLSearchParams(years);
+
+        let data = await fetch(`/exhibitions/data/timeline?${qs.toString()}`);
         let events = await data.json();
         timeline = new TL.Timeline('timeline-embed',
             {events: events},
