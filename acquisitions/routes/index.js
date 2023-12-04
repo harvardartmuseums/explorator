@@ -97,8 +97,14 @@ router.get('/stats/:yearfrom-:yearto', async function(req, res, next) {
 
   // objects = _.orderBy(objects, "accessionyear", "desc");
   let groups = _.groupBy(objects, "accessionyear");
+  
+  let output = {
+    acquisitioncount: objects.length.toLocaleString(),
+    groups: groups,
+    years: _.keys(groups)
+  };
 
-  res.render('year', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums', data:groups });
+  res.render('year', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums', data:output });
 });
 
 module.exports = router;

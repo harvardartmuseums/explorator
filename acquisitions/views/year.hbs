@@ -1,5 +1,8 @@
-<div class="container w-75 mb-4 mt-4">
-{{#each data}}
+<div class="container mb-4 mt-4">
+
+<h1 class="mb-4">{{data.acquisitioncount}} acquisitions</h1>
+
+{{#each data.groups}}
     <div class="row">
         <div class="col-12">
             <div class="bg-dark" style="height: 15px;"></div>
@@ -7,8 +10,8 @@
     </div>
     <div class="row">
         <div class="col-3">
-            <h1>{{@key}}</h1>
-            <h2>{{this.length}} objects</h2>
+            <h2>{{@key}}</h2>
+            <h3>{{this.length}} objects</h3>
         </div>
         <div class="col-9">
             {{#each this}}    
