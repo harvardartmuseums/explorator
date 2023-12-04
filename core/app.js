@@ -15,6 +15,7 @@ var color = require('../color/app');
 var exhibitions = require('../exhibitions/app');
 var magic = require('../magic/app');
 var buildings = require('../buildings/app');
+var acquisitions = require('../acquisitions/app');
 
 var app = express();
 
@@ -40,6 +41,7 @@ app.use('/color', color);
 app.use('/exhibitions', exhibitions);
 app.use('/magic', magic);
 app.use('/buildings', buildings);
+app.use('/acquisitions', acquisitions);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
