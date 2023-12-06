@@ -1,6 +1,7 @@
 var router = require("express-promise-router")();
 const ham  = require('@harvardartmuseums/ham');
 const _ = require('lodash');
+const list = require('../public/data/list');
 
 let HAM = new ham(process.env.apikey);
 
@@ -70,6 +71,12 @@ router.get('/stats/:yearfrom-:yearto', async function(req, res, next) {
   let now = new Date();
     
   for (let r of objects) {
+      // is the object in the future minded exhibition???
+      r.futureminded = 0;
+      if (list.includes(r.id)) {
+        r.futureminded = 1;
+      }
+
       // calculate the age of the object
       if (r.datebegin && r.dateend) {
         r.age = now.getFullYear() - ((r.datebegin + r.dateend)/2);
