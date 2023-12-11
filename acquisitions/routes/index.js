@@ -13,14 +13,14 @@ router.get('/', function(req, res, next) {
 router.get('/stats', async function(req, res, next) {
     let criteria = {
         size: 0,
-        q: 'accessionyear:>=2014'
+        q: 'accessionyear:>=2000'
     }
 
     let aggs = {
         "by_year": {
           "terms": {
             "field": "accessionyear",
-            "size": 10,
+            "size": 100,
             "order": { "_key": "desc" }     
           },
           "aggs": {
@@ -36,7 +36,25 @@ router.get('/stats', async function(req, res, next) {
                 }
               }
               }
-          }
+            },
+            "by_division": {
+              "terms": {
+                "field": "division",
+                "size": 10
+              }
+            },            
+            "by_accessionmethod": {
+              "terms": {
+                "field": "accessionmethod",
+                "size": 20
+              }
+            },
+            "by_classification": {
+              "terms": {
+                "field": "classification.exact",
+                "size": 100
+              }
+            }
           }
         }
 
@@ -112,6 +130,19 @@ router.get('/stats/:yearfrom-:yearto', async function(req, res, next) {
   };
 
   res.render('year', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums', data:output });
+});
+
+
+router.get('/future-minded', async function(req, res, next) {
+  let criteria = {
+    id: list.join("|"),
+    size: 100,
+    fields: 'id,titles,images,classification,accessionyear,colors,objectnumber,url'
+  }
+
+  let data = await HAM.Objects.search(criteria);
+
+  res.render('future-minded', {layout: '../../core/views/layout.hbs', title: 'Future Minded | Explorator | Harvard Art Museums', data: data });
 });
 
 module.exports = router;

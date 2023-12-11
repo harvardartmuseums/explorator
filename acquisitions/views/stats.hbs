@@ -1,7 +1,19 @@
-<h1>{{stats.info.totalrecords}} objects</h1>
 
+<div class="container mb-4 mt-4">
+    <h1>{{stats.info.totalrecords}} objects</h1>
 
-<div id="year-plot"></div>
+    <h2># of Accessions by Year</h2>
+    <div id="year-plot"></div>  
+
+    <h2>Distribution of Accession Methods by Year</h2>
+    <div id="method-plot"></div>
+
+    <h2>Accession Method</h2>
+    <div id="method-ridgeline-plot"></div>
+
+    <h2>Classification</h2>
+    <div id="classification-ridgeline-plot"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
@@ -11,6 +23,7 @@
     });
 
     function plotStats() {
+        // Plot 1
         const data = [
         {{#each stats.aggregations.by_year.buckets}}
             { count:{{doc_count}}, year:"{{key_as_string}}" },
@@ -21,11 +34,11 @@
             y: {grid: true},
             x: {type: 'band'},
             marks: [
-                Plot.barY(data, {x: "year", y: "count", sort: {x: "x", order: "descending"}, tip: true}),
+                Plot.barY(data, {x: "year", y: "count", sort: {x: "x", order: "ascending"}, tip: true}),
                 Plot.ruleY([0])
             ],
             height: 400,
-            width: 600,
+            width: 800,
             marginTop: 20, // 🌶 if you don't set the margins, the defaults flip the scales bottom-up
             marginBottom: 40,
             marginLeft: 50,
@@ -34,5 +47,81 @@
 
         let div = document.getElementById("year-plot");
         div.append(plot);   
+
+        // Plot 2
+        const dataMethod = [
+        {{#each stats.aggregations.by_year.buckets}}
+            {{#each by_accessionmethod.buckets}}
+                {year:"{{../key_as_string}}", count:{{doc_count}}, method:"{{key}}"},
+            {{/each}}
+        {{/each}}
+        ];
+
+        const plotMethod = Plot.plot({
+            y: {grid: true, percent: true},
+            x: {type: 'band'},
+            color: {legend: true},
+            marks: [
+                Plot.barY(dataMethod, {x: "year", y: "count", fill: "method", offset: "normalize", sort: {x: "x", order: "ascending"}, tip: true}),
+                Plot.ruleY([0])
+            ],
+            height: 400,
+            width: 800,
+            marginTop: 20, // 🌶 if you don't set the margins, the defaults flip the scales bottom-up
+            marginBottom: 40,
+            marginLeft: 50,
+            marginRight: 20
+        })
+
+        div = document.getElementById("method-plot");
+        div.append(plotMethod);   
+
+        // Plot 3 - method ridgeline
+        const plotMethodRidgeline = Plot.plot({
+            height: 40 + new Set(dataMethod.map(d => d.method)).size * 17,
+            width: 1000,
+            marginBottom: 1,
+            marginLeft: 220,
+            x: {axis: "top", type: "band"},
+            y: {axis: null, range: [2.5 * 17 - 2, (2.5 - 3.5) * 17 - 2]},
+            fy: {label: null, domain: dataMethod.map(d => d.method)}, // preserve input order
+            marks: [
+                d3.groups(dataMethod, d => d.method).map(([, counts]) => [
+                    Plot.areaY(counts, {x: "year", y: "count", fy: "method", curve: "basis", sort: "year", fill: "#ccc"}),
+                    Plot.lineY(counts, {x: "year", y: "count", fy: "method", curve: "basis", sort: "year", strokeWidth: 1})
+                ])
+            ]
+        });
+
+        div = document.getElementById("method-ridgeline-plot");
+        div.append(plotMethodRidgeline);   
+        
+        // Plot 4 - classification ridgeline
+        const dataClassification = [
+        {{#each stats.aggregations.by_year.buckets}}
+            {{#each by_classification.buckets}}
+                {year:"{{../key_as_string}}", count:{{doc_count}}, classification:"{{key}}"},
+            {{/each}}
+        {{/each}}
+        ];
+
+        const plotClassRidgeline = Plot.plot({
+            height: 40 + new Set(dataClassification.map(d => d.classification)).size * 17,
+            width: 1000,
+            marginBottom: 1,
+            marginLeft: 220,
+            x: {axis: "top", type: "band"},
+            y: {axis: null, range: [2.5 * 17 - 2, (2.5 - 3.5) * 17 - 2]},
+            fy: {label: null, domain: dataClassification.map(d => d.classification)}, // preserve input order
+            marks: [
+                d3.groups(dataClassification, d => d.classification).map(([, counts]) => [
+                    {{!-- Plot.areaY(counts, {x: "year", y: "count", fy: "classification", curve: "basis", sort: "year", fill: "#ccc"}), --}}
+                    Plot.lineY(counts, {x: "year", y: "count", fy: "classification", curve: "basis", fill: "#ccc", sort: "year", stroke: "currentColor", strokeWidth: 1})
+                ])
+            ]
+        });        
+
+        div = document.getElementById("classification-ridgeline-plot");
+        div.append(plotClassRidgeline);           
     }
 </script>

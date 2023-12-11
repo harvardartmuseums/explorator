@@ -1,0 +1,9 @@
+<div class="container">
+    {{data.info.totalrecords}}
+    {{#each data.records}}
+        {{#if images}}
+            <img src="{{images.0.iiifbaseuri}}/full/!150,150/0/default.jpg">
+        {{/if}}
+        {{accessionyear}}: <a href="{{url}}">{{objectnumber}}</a>
+    {{/each}}
+</div>
