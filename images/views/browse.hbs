@@ -32,6 +32,7 @@
 				<p>Image Description<br/>\{{images.[0].description}}</p>
 				<p>\{{#if commentary}}Object Commentary<br/>\{{commentary}}\{{/if}}</p>
 				<p>\{{#if labeltext}}Most Recent Wall Label Text on File<br/>\{{labeltext}}\{{/if}}</p>
+				<p>\{{#if images.[0].openaidescription}}Azure OpenAI Says<br/>\{{images.[0].openaidescription}}\{{/if}}</p>
 				<p><a href="\{{url}}">Read more at the object page</a>
 			</div>
 		</li>
@@ -49,7 +50,7 @@
 		let infoTemplate = Handlebars.compile(infoSource);
 		
 		$("#paginator").pagination({
-			dataSource: "/data/objects?q=images.alttext:* AND imagepermissionlevel:0&classification=any&sort=id",
+			dataSource: "browse/data",
 			locator: "records",
 			pageSize: 20,
 			alias: {
