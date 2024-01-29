@@ -28,10 +28,12 @@ router.get('/browse/data', async function(req, res, next) {
   let imageIdList = objects.records.map(r => r.images[0].imageid).join("|");
   criteria = {
     image: imageIdList,
+    size: 100,
     fields: 'body,imageid',
     q: 'source: "Azure OpenAI Service"'
   };
   let annotations = await HAM.Annotations.search(criteria);
+
   annotations.records.forEach(a => {
     let object = _.find(objects.records, {images: [{imageid: a.imageid}]});
     if (object) {
