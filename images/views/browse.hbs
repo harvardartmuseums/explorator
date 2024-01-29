@@ -3,7 +3,7 @@
 	<p class="lead">Browse alt text, image desriptions, etc</p>
 </header>
 
-<div class="container-fluid p-4">
+<div class="container p-4">
 	<p id="info" class="body"></p>
 	<div id="paginator"></div>
 	<div id="loader">
@@ -32,7 +32,7 @@
 				<p>Image Description<br/>\{{images.[0].description}}</p>
 				<p>\{{#if commentary}}Object Commentary<br/>\{{commentary}}\{{/if}}</p>
 				<p>\{{#if labeltext}}Most Recent Wall Label Text on File<br/>\{{labeltext}}\{{/if}}</p>
-				<p>\{{#if images.[0].openaidescription}}Azure OpenAI Says<br/>\{{images.[0].openaidescription}}\{{/if}}</p>
+				<p style="white-space: pre-line">\{{#if images.[0].openaidescription}}Azure OpenAI Says<br/>\{{images.[0].openaidescription}}\{{/if}}</p>
 				<p><a href="\{{url}}">Read more at the object page</a>
 			</div>
 		</li>
