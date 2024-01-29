@@ -28,12 +28,13 @@
 		<li class="media my-4">
 			<img class="d-flex mr-3" alt="\{{images.[0].alttext}}" src="\{{images.[0].iiifbaseuri}}/full/300,/0/default.jpg">
 			<div class="media-body">
-				<p>Alt Text<br/>\{{images.[0].alttext}}</p>
-				<p>Image Description<br/>\{{images.[0].description}}</p>
-				<p>\{{#if commentary}}Object Commentary<br/>\{{commentary}}\{{/if}}</p>
-				<p>\{{#if labeltext}}Most Recent Wall Label Text on File<br/>\{{labeltext}}\{{/if}}</p>
-				<p style="white-space: pre-line">\{{#if images.[0].openaidescription}}Azure OpenAI Says<br/>\{{images.[0].openaidescription}}\{{/if}}</p>
-				<p><a href="\{{url}}">Read more at the object page</a>
+				<h4>Alt Text</h4><p>\{{images.[0].alttext}}</p>
+				<h4>Image Description</h4><p>\{{images.[0].description}}</p>
+				\{{#if commentary}}<h4>Object Commentary</h4><p>\{{commentary}}\{{/if}}</p>
+				\{{#if labeltext}}<h4>Most Recent Wall Label Text on File</h4><p>\{{labeltext}}\{{/if}}</p>
+				\{{#if images.[0].openaidescription}}<h4>Azure OpenAI Says</h4><p style="white-space: pre-line">\{{images.[0].openaidescription}}\{{/if}}</p>
+				<p><a href="\{{url}}">Read more on the official object page</a></p>
+				<p><a href="https://ai.harvardartmuseums.org/object/\{{id}}">Explore more AI descriptions of this image</a></p>
 			</div>
 		</li>
 		<hr>
