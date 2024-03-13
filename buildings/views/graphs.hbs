@@ -13,20 +13,62 @@
     <p class="lead">Stay awhile. Stay forever.</p>
 </header>
 
-<section x-data="dataviz">            
-    <div x-show="isLoading" x-text="statusMessage"></div>
-    <div id="museum"></div>
+<section x-data="dataviz" class="m-2">            
+    <div x-show="isLoading" x-text="statusMessage" class="h2"></div>
+	<div x-show="!isLoading">
+		<label>Show me a </label>
+		<select x-model="layoutType" x-on:change="layout">
+			<option value="floor plan">floor plan</option>
+			<option value="pack">pack graph</option>
+		</select>
+		view of 
+		<label>art classified as </label>
+		<select x-model="filterSelection.classification" x-on:change="filter">
+			<option value="">anything</option>
+			<template x-for="classification in filters.classifications" >
+        		<option x-value="classification.id" x-text="classification.name"></option>
+    		</template>
+		</select>
+		<label>installed during the past</label>
+		<select x-model="filterSelection.age" x-on:change="filter">
+			<option value="9999999">anytime</option>
+			<option value="5">5 days</option>
+			<option value="30">30 days</option>
+			<option value="60">60 days</option>
+			<option value="90">90 days</option>
+			<option value="180">6 months</option>
+			<option value="365">1 year</option>
+			<option value="730">2 years</option>
+		</select>
+	</div>
+	<div class="d-flex">
+    	<div x-show="!isLoading" id="museum"></div>
+		<div x-show="!isLoading" id="info" class="p-2" style="max-width:250px"></div>
+	</div>
+	<div x-show="!isLoading" id="popup" class="position-absolute bg-warning p-2" style="visibility: hidden;"></div>
 </section>
 
 <footer class="page-footer grey darken-1 font-small p-3">
-    <div class="container-responsive text-left">This page shows a near realtime view of the 1,600 objects currently on view in the Harvard Art Museums.</div>
+    <div class="container-responsive text-left">This page shows a near realtime view of the <span id="numofobjectsonview"></span> objects currently on view in the Harvard Art Museums.</div>
 </footer>
 
 <script>
+	let popup = d3.select("#popup");
 
     document.addEventListener('alpine:init', () => {
         Alpine.data('dataviz', () => ({    
-            museum: {"name": "Harvard Art Museums", "children": []},
+            museum: {
+				"name": "Harvard Art Museums", 
+				"children": [
+					{"name": "Lower Level", "floor": 0},
+					{"name": "Level 1", "floor": 1},
+					{"name": "Level 2", "floor": 2},
+					{"name": "Level 3", "floor": 3},
+					{"name": "Level 4", "floor": 4},
+					{"name": "Level 5", "floor": 5}
+				]},
+			filters: {"classifications": []},
+			filterSelection: {"classification": "", "age": 9999999},
             isLoading: false,
             statusMessage: 'Loading...',
             layoutType: '',
@@ -40,54 +82,77 @@
 
                 this.isLoading = true;
                 
+				await this.buildFilters();
+
                 let baseURL = '/data/galleries?size=100&sort=gallerynumber';
 
-                this.statusMessage = 'Building the Lower Level';
-                let level0 = await fetch(baseURL + '&floor=0')
-                    level0 = await level0.json();
-                level0.records.forEach(this.prepareRoom);
-                this.museum.children[0] = {"name": "Lower Level"};
-                this.museum.children[0].children = level0.records;
+				for (let level of this.museum.children) {
+					this.statusMessage = `Building ${level.name}`;
+					
+					// fetch the list of rooms
+					let rooms = await fetch(`${baseURL}&floor=${level.floor}`);
+                    rooms = await rooms.json();
 
-                this.statusMessage = 'Building the Level 1';
-                let level1 = await fetch(baseURL + '&floor=1');
-                    level1 = await level1.json();
-                level1.records.forEach(this.prepareRoom);
-                this.museum.children[1] = {"name": "Level 1"};
-                this.museum.children[1].children = level1.records;                    
+					// fetch the list of objects for each room
+                	rooms.records.forEach(this.prepareRoom);
+                	level.children = rooms.records;
 
-                this.statusMessage = 'Building the Level 2';
-                let level2 = await fetch(baseURL + '&floor=2');
-                    level2 = await level2.json();
-                level2.records.forEach(this.prepareRoom);
-                this.museum.children[2] = {"name": "Level 2"};
-                this.museum.children[2].children = level2.records;                    
+					level.svg = await d3.xml(`/buildings/images/floor-${level.floor}.svg`);
+				}
 
-                this.statusMessage = 'Building the Level 3';
-                let level3 = await fetch(baseURL + '&floor=3');
-                    level3 = await level3.json();
-                level3.records.forEach(this.prepareRoom);
-                this.museum.children[3] = {"name": "Level 3"};
-                this.museum.children[3].children = level3.records;                    
-
-                this.statusMessage = 'Building the Level 4';
-                let level4 = await fetch(baseURL + '&floor=4');
-                    level4 = await level4.json();
-                level4.records.forEach(this.prepareRoom);
-                this.museum.children[4] = {"name": "Level 4"};
-                this.museum.children[4].children = level4.records;                    
-
-                this.statusMessage = 'Building the Level 5';
-                let level5 = await fetch(baseURL + '&floor=5');
-                    level5 = await level5.json();
-                level5.records.forEach(this.prepareRoom);
-                this.museum.children[5] = {"name": "Level 5"};
-                this.museum.children[5].children = level5.records;
+				this.museum.totalrecordsonview = await this.getObjectCount();
+				d3.select("#numofobjectsonview").text(this.museum.totalrecordsonview);
 
                 this.isLoading = false;
 
-                this.packLayout();
+				this.layout();
             },
+
+			async getObjectCount() {
+                let baseURL = '/data/objects';
+                let urlParameters = new URLSearchParams({
+                                            size: 0,
+                                            gallery: 'any',  
+                                        });				
+
+                let art = await fetch(`${baseURL}?${urlParameters.toString()}`);
+                    art = await art.json();
+                return art.info.totalrecords;	
+			},
+
+			async buildFilters() {
+				let baseURL = '/data/objects';
+				let aggs = {
+					"by_classification": {
+						"terms": {
+							"field": "classification.exact",
+							"size": 200, 
+							"order": { "_key": "asc" }
+						}
+					},
+					"by_division": { 
+						"terms": { 
+							"field": "division"
+						}
+					},
+					"by_gender": {
+						"terms": {
+							"field": "people.gender"
+						}
+					}
+				};
+				let urlParameters = new URLSearchParams({
+										size: 0,
+										gallery: 'any',
+										aggregation: JSON.stringify(aggs)
+				});
+
+				let data = await fetch(`${baseURL}?${urlParameters.toString()}`).then(r => r.json());	
+
+				data.aggregations.by_classification.buckets.forEach(d => {
+					this.filters.classifications.push({name: d.key, count: d.doc_count});
+				});
+			},
 
             async prepareRoom(d) {
                 let baseURL = '/data/objects';
@@ -95,7 +160,7 @@
                                             size: 100,
                                             gallery: d.gallerynumber,  
                                             sort: 'gallery.gallerynumber', 
-                                            fields: 'objectnumber,objectid,title,dated,url,primaryimageurl,classification,gallery'
+                                            fields: 'objectnumber,objectid,title,dated,url,primaryimageurl,classification,classificationid,gallery,rank,totalpageviews'
                                         });				
 
                 let art = await fetch(`${baseURL}?${urlParameters.toString()}`);
@@ -115,16 +180,112 @@
                 }
             },
 
-            packLayout() {
-				this.layoutType = "pack";
-						
+			filter(e) {
+				d3.selectAll("#museum circle.object")
+					.style("opacity", 1.0)
+					.filter(this.isNotInSelection.bind(this))
+						.style("opacity", 0.1);					
+			},
+
+			async layout(e) {
+				d3.select("#museum")
+					.selectAll("*").remove();
+					
+				// toggle visibility to prevent flickering
+				d3.select("#museum")					
+					.style("visibility", "hidden");
+				
+				if (this.layoutType === "pack") {
+					await this.packLayout();
+				} else {
+					await this.floorplanLayout();
+				}
+				this.filter();
+
+				d3.select("#museum")
+					.style("visibility", "visible");
+			},
+
+			isNotInSelection(record) {
+				let output = false;
+				if (record.data.gallery) {
+					if ((record.data.gallery.age > this.filterSelection.age)) {
+						output = true;
+					}
+					if (this.filterSelection.classification !== "") {
+						if (record.data.classification != this.filterSelection.classification) {
+							output = true;
+						}
+					}
+				}
+
+				return output;
+			},
+
+			async floorplanLayout() {
+				var w = this.width,
+				    h = this.height;
+				
+			    let colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+				var node = $.extend(true, {}, this.museum);
+
+				let f1 = await d3.xml("/buildings/images/floor-1.svg");
+				populateFloor(f1, node.children[1]);
+
+				let f2 = await d3.xml("/buildings/images/floor-2.svg");
+				populateFloor(f2, node.children[2]);
+				
+				let f3 = await d3.xml("/buildings/images/floor-3.svg");
+				populateFloor(f3, node.children[3]);
+
+				function populateFloor(map, data) {
+					var floor = document.getElementById('museum')
+									.appendChild(map.documentElement);
+			
+					var canvas = d3.select(floor)
+						.attr("id", "floor-" + data.floor)
+						.attr("width", w/3.1)
+				    	.attr("height", h/1.5);
+
+					for (const d of data.children) {
+					    var room = d3.select('#rooms path[data-room="' + d.gallerynumber + '"]');	
+					    if (!room.empty()) {
+							var roomDims = room.node().getBBox();
+
+							var pack = d3.pack()
+								.size([roomDims.width, roomDims.height]);
+
+							var root =  d3.hierarchy(d)
+							            	.sum(d => d.hasOwnProperty("rank") ? d.objectid : 0)
+											.sort((a,b) => b.value - a.value);
+							
+							var nodes = pack(root);
+							
+							canvas.selectAll("circles")
+									.data(nodes.descendants())
+								.enter().append("circle")
+									.attr("class", "object")
+									.attr('cx', function(d) { return d.x + roomDims.x; })
+									.attr('cy', function(d) { return d.y + roomDims.y; })
+									.attr('r', function(d) { return d.r; })
+									.style('fill',  function(d) { return d.data.classification ? colors(d.data.classification) : "#ffffff"; })
+									.on("click", updateInfoPanel)
+									.on("mouseover", showInfoPopup)
+									.on("mouseout", hideInfoPopup);
+						}
+				    };
+				}	
+			},
+
+            async packLayout() {
 				//See https://github.com/mbostock/d3/wiki/Pack-Layout
 				//See http://mbostock.github.io/d3/talk/20111018/#22
 				//http://bl.ocks.org/mbostock/4063530
 				//http://bl.ocks.org/mbostock/4063269
 	    
-				var w = this.width + this.margin.right + this.margin.left,
-				    h = this.height + this.margin.top + this.margin.bottom,
+				var w = this.width,
+				    h = this.height,
 				    r = this.height,
 				    x = d3.scaleLinear().range([0, r]),
 				    y = d3.scaleLinear().range([0, r]),
@@ -137,8 +298,8 @@
 				    .size([r, r]);
 
 				var vis = d3.select("#museum").append("svg")
-				    .attr("width", this.width + this.margin.right + this.margin.left)
-				    .attr("height", this.height + this.margin.top + this.margin.bottom)
+				    .attr("width", w)
+				    .attr("height", h)
 				    .on("click", function() { zoom(root); })
 				  .append("g")
 				    .attr("transform", "translate(" + (w - r) / 2 + "," + (h - r) / 2 + ")");
@@ -152,19 +313,22 @@
 				vis.selectAll("circle")
 				  .data(nodes.descendants())
 				.enter().append("circle")
-				  .attr("class", function(d) { return d.children ? "parent" : "child"; })
+				  .attr("class", function(d) { return d.children ? "gallery" : "object"; })
 				  .attr("cx", function(d) { return d.x; })
 				  .attr("cy", function(d) { return d.y; })
 				  .attr("r", function(d) { return d.r; })
                   .style("stroke", "#999")
 				  .style("fill", function(d) {return d.data.classification ? colors(d.data.classification) : "#ffffff"; })
-				  .on("click", function(d) { return zoom(node == d ? root : d); });
+					.on("click", updateInfoPanel)
+					.on("mouseover", showInfoPopup)
+					.on("mouseout", hideInfoPopup);
+				  {{!-- .on("click", function(d) { return zoom(node == d ? root : d); }) --}}
                 
 
 				vis.selectAll("text")
 				  .data(nodes.descendants())
 				.enter().append("text")
-				  .attr("class", function(d) { return d.children ? "parent" : "child"; })
+				  .attr("class", function(d) { return d.children ? "parent" : "child"; })	
 				  .attr("x", function(d) { return d.x; })
 				  .attr("y", function(d) { return d.y; })
 				  .attr("dy", ".35em")
@@ -174,24 +338,7 @@
 				  .text(function(d) { return d.data.gallerynumber ? d.data.name + ' (' + d.data.gallerynumber + ')' : d.data.objectnumber ? d.data.classification : d.data.name; })
 				  .on("click", function(d) { return zoom(node == d ? root : d); });
 
-				function reset() {
-					{{!-- filterSelection = {
-						"classification": [],
-						"age": 9999999
-					};
-					
-					// reset all of the interest buttons
-					$(".interest-button").removeClass("button-on");
-					$("#age-filters").prop('selectedIndex',0);
-					
-					// reset the display
-					d3.selectAll("#museum circle.child")
-						.style("opacity", 0.2); --}}
-				}
-
 				function zoom(d, i) {
-				  {{!-- updateInfoPanel(d); --}}
-
 				  var focus = d;
 
 				  //Zoom up until the second last depth
@@ -222,9 +369,60 @@
 				  node = d;
 				  d3.event.stopPropagation();
 				}			
-			}            
-        }))
-    })
+			}			   
+        }));
+    });
 
+	function showInfoPopup(data) {
+		let object = data.data;
+		if (object.title) {
+			d3.select(d3.event.target)
+				.style('stroke', '#000000')
+				.style('stroke-width', '5');
+			
+			popup
+				.style("top", (d3.event.pageY-20)+"px").style("left",(d3.event.pageX+20)+"px")
+				.style("visibility", "visible")
+				.html(object.title);
+			if (object.primaryimageurl) {
+				popup.append("img")
+					.attr("class", "p-2")
+					.attr("src", object.primaryimageurl + "?width=150");
+			}
+		}
+	}
 
+	function hideInfoPopup(data) {			
+		let object = data.data;
+		if (object.title) {			
+			d3.select(d3.event.target)
+					.style('stroke', '')
+		}
+		popup.style("visibility", "hidden");
+	}
+
+	function updateInfoPanel(data) {
+		let object = data.data;
+		var info = d3.select("#info")
+					.insert("div", ":first-child")
+					.attr("class", "data-block");
+
+		var title = info.append("div");
+		var details = info.append("div");
+		
+		var t = object.title;
+		if (object.dated) t += ", " + object.dated;
+		
+		title.append("a")
+			.attr("href", object.url)
+			.attr("target", "_blank")
+			.html(t);
+
+		details.text(`${object.classification}; On view for ${object.gallery.age} days in room ${object.gallery.gallerynumber}`);
+		
+		if (object.primaryimageurl) {
+			info.append("img")
+				.attr("src", object.primaryimageurl + "?width=100");
+		}					
+	}					
 </script>
