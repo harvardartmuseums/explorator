@@ -1,11 +1,14 @@
 
 <header class="jumbotron grey lighten-4">
     <h1>Magnetic Poetry</h1>
-    <p class="lead"></p>
+    <p class="lead">Drag the words around to make your own poetry.</p>
+    
+    Double click on a word to see it in context. Double click again to hide the context.<br/>
+    Click the <button id="reset" type="button">Reset</button>  button to start over.
 </header>
 
 <div class="container-fluid">
-    <button id="reset" type="button">Reset</button> 
+    
 	<div class="row">
 		<div class="col-md-3" id="word-list"></div>
 		{{!-- <div class="col-md-9 magnetic-refrigerator" id="refrigerator"></div> --}}
@@ -63,22 +66,20 @@
                 let i = document.createElement("img");
                 i.id = data[0].id;
                 i.className = "draggable magnetic-word";
-                i.style = "padding:2px";
+                i.style = "padding:2px;position:relative";
                 i.src = iiifImageFragment;
                 i.setAttribute("alt", data[0].body);
                 i.ondblclick = showFullImage;
 
                 wordContainer.appendChild(i);
+                interact(i).draggable({onmove: dragMoveListener});
+
             }
         }
-
-        interact('.draggable').draggable({onmove: dragMoveListener});
     }
 
 	function clearTheRefrigerator() {
-        {{!-- let poem = document.getElementsByTagName('img').filter( e => {e.data.x && e.data.x != 0} ) --}}
-
-		let poem = $("img").filter(function() {return $(this).attr("data-x") && $(this).attr("data-x") != 0;});
+		let poem = $("img").filter(function() {return $(this).attr("data-x") && $(this).attr("data-y") != 0;});
         anime({
             targets: [poem.toArray()],
             translateX: 0,
@@ -141,7 +142,7 @@
         
         document.body.appendChild(container);
 
-        interact('.draggable').draggable({onmove: dragMoveListener});
+        interact(container).draggable({onmove: dragMoveListener});
     }
 
     function dragMoveListener (e) {
