@@ -20,6 +20,7 @@
 		<select x-model="layoutType" x-on:change="layout">
 			<option value="floor plan">floor plan</option>
 			<option value="pack">pack graph</option>
+			<option value="tree">tree</option>
 		</select>
 		view of 
 		<label>art classified as </label>
@@ -173,6 +174,7 @@
                     dt2 = new Date();
                     var age = Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate()) ) /(1000 * 60 * 60 * 24));
                     art.records[i].gallery.age = age;
+					art.records[i].name = art.records[i].title;
                 }
 
                 if (d.id) {
@@ -181,7 +183,7 @@
             },
 
 			filter(e) {
-				d3.selectAll("#museum circle.object")
+				d3.selectAll("#museum circle.object, #museum text.object")
 					.style("opacity", 1.0)
 					.filter(this.isNotInSelection.bind(this))
 						.style("opacity", 0.1);					
@@ -197,6 +199,8 @@
 				
 				if (this.layoutType === "pack") {
 					await this.packLayout();
+				} else if (this.layoutType === "tree") {
+					await this.treeLayout();
 				} else {
 					await this.floorplanLayout();
 				}
@@ -369,6 +373,84 @@
 				  node = d;
 				  d3.event.stopPropagation();
 				}			
+			},
+
+			async treeLayout() {
+				const width = this.width;
+
+				// Compute the tree height; this approach will allow the height of the
+				// SVG to scale according to the breadth (width) of the tree layout.
+				const root = d3.hierarchy(this.museum);
+				const dx = 10;
+				const dy = width / (root.height + 1);
+
+			    const colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+				// Create a tree layout.
+				const tree = d3.tree().nodeSize([dx, dy]);
+
+				// Sort the tree and apply the layout.
+				root.sort((a, b) => d3.ascending(a.data.name, b.data.name));
+				tree(root);
+
+				// Compute the extent of the tree. Note that x and y are swapped here
+				// because in the tree layout, x is the breadth, but when displayed, the
+				// tree extends right rather than down.
+				let x0 = Infinity;
+				let x1 = -x0;
+				root.each(d => {
+					if (d.x > x1) x1 = d.x;
+					if (d.x < x0) x0 = d.x;
+				});
+
+				// Compute the adjusted height of the tree.
+				const height = x1 - x0 + dx * 2;
+
+				const svg = d3.select("#museum").append("svg")
+					.attr("width", width)
+					.attr("height", height)
+					.attr("viewBox", [-dy / 3, x0 - dx, width, height])
+					.attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
+
+				const link = svg.append("g")
+					.attr("fill", "none")
+					.attr("stroke", "#555")
+					.attr("stroke-opacity", 0.4)
+					.attr("stroke-width", 1.5)
+					.selectAll()
+					.data(root.links())
+					.join("path")
+						.attr("d", d3.linkHorizontal()
+							.x(d => d.y)
+							.y(d => d.x));
+				
+				const node = svg.append("g")
+					.attr("stroke-linejoin", "round")
+					.attr("stroke-width", 3)
+					.selectAll()
+					.data(root.descendants())
+					.join("g")
+					.attr("transform", d => `translate(${d.y},${d.x})`);
+
+				node.append("circle")
+					.attr("class", d => d.children ? "gallery" : "object")
+					.attr("fill", d => d.data.classification ? colors(d.data.classification) : "#999")
+					.attr("r", 2.5)
+					.on("click", updateInfoPanel)
+					.on("mouseover", showInfoPopup)
+					.on("mouseout", hideInfoPopup);
+
+				node.append("text")
+					.attr("dy", "0.31em")
+					.attr("x", d => d.children ? -6 : 6)
+					.attr("text-anchor", d => d.children ? "end" : "start")
+					.text(d => d.data.name)
+					.attr("stroke", "white")
+					.attr("paint-order", "stroke")
+					.attr("class", d => d.children ? "gallery" : "object")
+					.on("click", updateInfoPanel)
+					.on("mouseover", showInfoPopup)
+					.on("mouseout", hideInfoPopup);
 			}			   
         }));
     });
