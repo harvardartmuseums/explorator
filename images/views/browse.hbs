@@ -33,6 +33,7 @@
 				\{{#if commentary}}<h4>Object Commentary</h4><p>\{{commentary}}\{{/if}}</p>
 				\{{#if labeltext}}<h4>Most Recent Wall Label Text on File</h4><p>\{{labeltext}}\{{/if}}</p>
 				\{{#if images.[0].openaidescription}}<h4>Azure OpenAI Says</h4><p style="white-space: pre-line">\{{images.[0].openaidescription}}\{{/if}}</p>
+				\{{#if images.[0].anthropicaidescription}}<h4>Anthropic Claude Says</h4><p style="white-space: pre-line">\{{images.[0].anthropicaidescription}}\{{/if}}</p>
 				<p><a href="\{{url}}">Read more on the official object page</a></p>
 				<p><a href="https://ai.harvardartmuseums.org/object/\{{id}}">Explore more AI descriptions of this image</a></p>
 			</div>
