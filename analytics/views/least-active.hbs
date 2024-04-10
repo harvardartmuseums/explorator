@@ -1,0 +1,51 @@
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
+<header class="jumbotron grey lighten-4">
+	<h1>Have you seen me?</h1>
+	<p class="lead">Absence makes the heart grow fonder</p>
+</header>
+<section class="container-fluid">
+	<div x-data="recordlist">
+		<template x-for="record in records">
+			<a :href="`${record.url}`"><img style="width: 150px;height:150px;overflow:hidden"  :src="`${record.primaryimageurl}:IMAGE/square/!150,150/0/default.jpg`"></a>
+		</template>
+		
+		<div class="d-grid gap-2">
+  			<button class="btn btn-primary" type="button" @click="nextPage">Load More</button>
+		</div>	
+	</div>
+</section>
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="container-responsive text-left">Another R&D project from the department of Digital Infrastructure and Emerging Technology. Built with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>.</div>
+</footer>
+
+<script>
+	document.addEventListener('alpine:init', () => {
+		Alpine.data('recordlist', () => ({    
+            isLoading: false,
+			page: 1,
+			records: [],
+
+			async init() {
+				this.records = await this.getRecords();
+			},
+
+			async nextPage() {
+				this.page+=1;
+				this.records = this.records.concat(await this.getRecords());
+			},
+
+			async getRecords() {
+                let urlParameters = new URLSearchParams({				
+					q: 'accesslevel:1 AND exhibitioncount:0 AND publicationcount:0 AND totalpageviews:0',
+					hasimage: 1,
+					fields: 'primaryimageurl,url',
+					page: this.page,
+					size: 100
+				});
+				let url = `/data/objects?${urlParameters.toString()}`; 
+				let results = await fetch(url).then(response => response.json());
+				return results.records;
+			}
+		}));
+	});
+</script>
