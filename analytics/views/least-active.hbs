@@ -5,14 +5,60 @@
 </header>
 <section class="container-fluid">
 	<div x-data="recordlist">
-		<template x-for="record in records">
-			<a :href="`${record.url}`"><img style="width: 150px;height:150px;overflow:hidden"  :src="`${record.primaryimageurl}:IMAGE/square/!150,150/0/default.jpg`"></a>
-		</template>
-		
-		<div class="d-grid gap-2">
-  			<button class="btn btn-primary" type="button" @click="nextPage">Load More</button>
+    	<div x-show="isLoading" x-text="statusMessage" class="h2"></div>
+		<div x-show="!isLoading">
+			<label>Show me </label>
+			<select x-model="criteria.named.classification" @change="filter">
+				<option value="any">anything</option>
+				<template x-for="facet in facets.by_classification.buckets">
+					<option :value="facet.key" :selected="facet.key === criteria.named.classification" x-text="`${facet.key} (${facet.doc_count})`"></option>
+				</template>
+			</select>
+			<label> acquired in </label>
+			<select x-model="criteria.q.accessionyear" @change="filter">
+				<option value="*">any year</option>
+				<template x-for="facet in facets.by_accessionyear.buckets">
+					<option :value="facet.key_as_string" :selected="facet.key_as_string === criteria.q.accessionyear" x-text="`${facet.key_as_string} (${facet.doc_count})`"></option>
+				</template>
+			</select>
+			that's been 
+			<label> published </label>
+			<select x-model="criteria.q.publicationcount" @change="filter">
+				<option value=">-1">or not</option>
+				<option value="0">0 times</option>
+				<option value=">1">more than 1 time</option>
+				<option value=">10">more than 10 times</option>
+				<option value=">20">more than 20 times</option>
+			</select>
+			<label>, exhibited </label>
+			<select x-model="criteria.q.exhibitioncount" @change="filter">
+			<option value=">-1">or not</option>
+				<option value="0">0 times</option>
+				<option value=">1">more than 1 time</option>
+				<option value=">10">more than 10 times</option>
+				<option value=">20">more than 20 times</option>				
+			</select>
+			<label>, and accessed online </label>
+			<select x-model="criteria.q.totalpageviews" @change="filter">
+			<option value=">-1">or not</option>
+				<option value="0">0 times</option>
+				<option value=">1">more than 1 time</option>
+				<option value=">10">more than 10 times</option>
+				<option value=">100">more than 100 times</option>				
+				<option value=">1000">more than 1000 times</option>				
+				<option value=">10000">more than 10000 times</option>				
+			</select>
+		</div>		
+		<div>
+			<template x-for="record in records">
+				<a :href="`${record.url}`"><img style="width: 150px;height:150px;overflow:hidden" @mousemove="showPopUp($event,record)" @mouseout="hidePopUp()" :src="`${record.primaryimageurl}`"></a>
+			</template>
+		</div>
+		<div class="d-grid mt-4">
+  			<button class="btn btn-primary btn-lg w-100 p-4" type="button" @click="nextPage">Load More</button>
 		</div>	
 	</div>
+	<div id="popup" class="p-1 bg-light position-absolute w-25"></div>
 </section>
 <footer class="page-footer grey darken-1 font-small p-3">
 	<div class="container-responsive text-left">Another R&D project from the department of Digital Infrastructure and Emerging Technology. Built with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>.</div>
@@ -22,11 +68,45 @@
 	document.addEventListener('alpine:init', () => {
 		Alpine.data('recordlist', () => ({    
             isLoading: false,
+            statusMessage: 'Rummaging...',
+			popup: document.getElementById("popup"),
 			page: 1,
 			records: [],
+			facets: {},
+			criteria: {
+				q: {
+					accesslevel: 1,
+					exhibitioncount: '>-1',
+					publicationcount: '>-1',
+					totalpageviews: '>-1'
+				},
+				named: {
+					classification: 'any'
+				},
+			},
+			sort: 'rank',
+			sortorder: 'desc',
 
 			async init() {
+				this.isLoading = true;
+				this.facets = await this.getFacets();
 				this.records = await this.getRecords();
+				this.isLoading = false;
+			},
+
+			reset() {
+				this.page = 1;
+				this.records = [];
+			},
+
+			async filter() {
+
+				console.log(this.criteria)
+				this.isLoading = true;
+				this.reset();
+				this.records = await this.getRecords();
+				this.facets = await this.getFacets();
+				this.isLoading = false;
 			},
 
 			async nextPage() {
@@ -34,17 +114,83 @@
 				this.records = this.records.concat(await this.getRecords());
 			},
 
-			async getRecords() {
+			expandCriteria() {
+				return Object.entries(this.criteria.q).map(([k, v]) => `${k}:${v}`).join(' AND ');
+			},
+
+			async getFacets() {
+				let aggs = {
+					"by_classification": {
+						terms: {
+							field: "classification.exact",
+							size: 100
+						}
+					},
+					"by_accessionyear": {
+						terms: {
+							field: "accessionyear",
+							size: 150,
+							order: { "_key": "asc" }
+						}
+					},
+					"by_accessionmethoid": {
+						terms: {
+							field: "accessionmethod",
+							size: 150
+						}
+					}
+				};
+
                 let urlParameters = new URLSearchParams({				
-					q: 'accesslevel:1 AND exhibitioncount:0 AND publicationcount:0 AND totalpageviews:0',
-					hasimage: 1,
-					fields: 'primaryimageurl,url',
-					page: this.page,
-					size: 100
+					q: this.expandCriteria(),
+					...this.criteria.named,
+					size: 0,
+					aggregations: JSON.stringify(aggs)
 				});
 				let url = `/data/objects?${urlParameters.toString()}`; 
+
 				let results = await fetch(url).then(response => response.json());
+				return results.aggregations;
+			},
+
+			async getRecords() {
+                let urlParameters = new URLSearchParams({				
+					q: this.expandCriteria(),
+					...this.criteria.named,
+					fields: 'primaryimageurl,url,title,rank,classification,accessionyear,accessionmethod',
+					page: this.page,
+					sort: this.sort,
+					sortorder: this.sortorder,
+					size: 100,
+				});
+				let url = `/data/objects?${urlParameters.toString()}`; 
+
+				let results = await fetch(url).then(response => response.json());
+
+				for (let r of results.records) {
+					if (r.primaryimageurl === undefined) {
+						r.primaryimageurl = '/images/Image-Unavailable.jpg';
+					} else {
+						r.primaryimageurl += ':IMAGE/square/!150,150/0/default.jpg';	
+					}
+				}
+				
 				return results.records;
+			},
+
+			showPopUp(event,record) {
+				this.popup.style.top = `${event.pageY}px`;
+				this.popup.style.left = `${event.pageX+10}px`;
+				this.popup.innerText = `${record.title}
+										 ${record.classification}
+										 Ranked #${record.rank}
+										 ${record.accessionyear == null ? 'Accession year unknown' : 'Accessioned in ' + record.accessionyear } via ${record.accessionmethod}`;
+										 
+				this.popup.style.visibility = 'visible';
+			},
+
+			hidePopUp() {
+				this.popup.style.visibility = 'hidden';
 			}
 		}));
 	});

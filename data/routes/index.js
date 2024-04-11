@@ -16,7 +16,7 @@ router.get('/:endpoint', cache('12 hours'), async function(req, res, next) {
     };
 
     for (var param in req.query) {
-        if (param == 'aggregation') {
+        if (param == 'aggregation' || param == 'aggregations') {
             qs.aggregations = JSON.parse(req.query[param]);
         } else {
             qs.parameters[param] = req.query[param];
