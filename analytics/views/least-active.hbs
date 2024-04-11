@@ -21,6 +21,13 @@
 					<option :value="facet.key_as_string" :selected="facet.key_as_string === criteria.q.accessionyear" x-text="`${facet.key_as_string} (${facet.doc_count})`"></option>
 				</template>
 			</select>
+			<label> by </label>
+			<select x-model="criteria.q.accessionmethod" @change="filter">
+				<option value="*">any method</option>
+				<template x-for="facet in facets.by_accessionmethod.buckets">
+					<option :value="facet.key" :selected="facet.key === criteria.q.accessionmethod" x-text="`${facet.key} (${facet.doc_count})`"></option>
+				</template>
+			</select>			
 			that's been 
 			<label> published </label>
 			<select x-model="criteria.q.publicationcount" @change="filter">
@@ -133,7 +140,7 @@
 							order: { "_key": "asc" }
 						}
 					},
-					"by_accessionmethoid": {
+					"by_accessionmethod": {
 						terms: {
 							field: "accessionmethod",
 							size: 150
