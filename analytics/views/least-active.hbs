@@ -6,7 +6,7 @@
 <section class="container-fluid">
 	<div x-data="recordlist">
     	<div x-show="isLoading" x-text="statusMessage" class="h2"></div>
-		<div x-show="!isLoading" class="mb-4">
+		<div x-show="!isLoading" class="mb-2">
 			<label>Show me </label>
 			<select x-model="criteria.named.classification" @change="filter">
 				<option value="any">anything</option>
@@ -63,14 +63,15 @@
 				<option value=">=5">has 5 or more</option>
 				<option value=">=10">has 10 or more</option>
 			</select> images.
-		</div>		
+		</div>
+		<div class="h4">Rummaging through <span x-text="stats.currentrecordcount.toLocaleString()"></span> items. <span x-text="(stats.totalrecordcount-stats.currentrecordcount).toLocaleString()"></span> left behind.</div>
 		<div>
 			<template x-for="record in records">
 				<a :href="`${record.url}`"><img style="width: 150px;height:150px;overflow:hidden" @mousemove="showPopUp($event,record)" @mouseout="hidePopUp()" :src="`${record.primaryimageurl}`"></a>
 			</template>
 		</div>
-		<div class="d-grid mt-4">
-  			<button class="btn btn-primary btn-lg w-100 p-4" type="button" @click="nextPage">Load More</button>
+		<div class="d-grid mt-4 mb-4">
+  			<button class="btn btn-primary btn-lg w-100 p-4" type="button" @click="nextPage">Show me a bit more</button>
 		</div>	
 	</div>
 	<div id="popup" class="p-1 bg-light position-absolute w-25"></div>
@@ -87,6 +88,10 @@
 			popup: document.getElementById("popup"),
 			page: 1,
 			records: [],
+			stats: {
+				totalrecordcount: 0,
+				currentrecordcount: 0
+			},
 			facets: {},
 			criteria: {
 				q: {
@@ -105,6 +110,7 @@
 
 			async init() {
 				this.isLoading = true;
+				this.stats.totalrecordcount = await this.getCount();
 				this.facets = await this.getFacets();
 				this.records = await this.getRecords();
 				this.isLoading = false;
@@ -116,8 +122,6 @@
 			},
 
 			async filter() {
-
-				console.log(this.criteria)
 				this.isLoading = true;
 				this.reset();
 				this.records = await this.getRecords();
@@ -132,6 +136,18 @@
 
 			expandCriteria() {
 				return Object.entries(this.criteria.q).map(([k, v]) => `${k}:${v}`).join(' AND ');
+			},
+
+			async getCount() {
+				let urlParameters = new URLSearchParams({				
+					q: this.expandCriteria(),
+					...this.criteria.named,
+					size: 0
+				});
+				let url = `/data/objects?${urlParameters.toString()}`; 
+
+				let results = await fetch(url).then(response => response.json());
+				return results.info.totalrecords;
 			},
 
 			async getFacets() {
@@ -191,6 +207,8 @@
 					}
 				}
 				
+				this.stats.currentrecordcount = results.info.totalrecords;
+
 				return results.records;
 			},
 
