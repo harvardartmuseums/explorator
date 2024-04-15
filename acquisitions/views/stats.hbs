@@ -1,6 +1,10 @@
-
+<header class="jumbotron grey lighten-4">
+	<h1>Acquisition Stats</h1>
+	<p class="lead">The collection by the numbers</p>
+</header>
 <div class="container mb-4 mt-4">
-    <h1>{{stats.info.totalrecords}} objects</h1>
+    <h1>Plotting {{stats.info.totalrecordsString}} objects</h1>
+    <hr>
 
     <h2># of Accessions by Year</h2>
     <div id="year-plot"></div>  
@@ -9,11 +13,15 @@
     <div id="method-plot"></div>
 
     <h2>Accession Method</h2>
-    <div id="method-ridgeline-plot"></div>
+    <div id="method-ridgeline-plot" style="position: relative;left: -174px"></div>
 
     <h2>Classification</h2>
-    <div id="classification-ridgeline-plot"></div>
+    <div id="classification-ridgeline-plot" style="position: relative;left: -174px"></div>
 </div>
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="container-responsive text-left">Another R&D project from the department of Digital Infrastructure and Emerging Technology. Built with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>.</div>
+</footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
@@ -78,7 +86,7 @@
 
         // Plot 3 - method ridgeline
         const plotMethodRidgeline = Plot.plot({
-            height: 40 + new Set(dataMethod.map(d => d.method)).size * 17,
+            height: 90 + new Set(dataMethod.map(d => d.method)).size * 17,
             width: 1000,
             marginBottom: 1,
             marginLeft: 220,

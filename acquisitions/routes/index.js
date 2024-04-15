@@ -13,7 +13,21 @@ router.get('/', function(req, res, next) {
 router.get('/stats', async function(req, res, next) {
     let criteria = {
         size: 0,
-        q: 'accessionyear:>=2000'
+        q: 'accesslevel:1'
+    }
+    
+    if (req.query.year) {
+      criteria.q += ` AND accessionyear:>=${req.query.year}`;
+    } else {
+      criteria.q += ' AND accessionyear:>=2000';
+    }
+
+    if (req.query.exclude) {
+      criteria.q += ` AND !(accessionmethod: ${req.query.exclude})`;
+    }
+
+    if (req.query.include) {
+      criteria.q += ` AND accessionmethod: "${req.query.include}"`;
     }
 
     let aggs = {
@@ -61,16 +75,15 @@ router.get('/stats', async function(req, res, next) {
     };
 
     let data = await HAM.Objects.search(criteria, aggs);
+    data.info.totalrecordsString = data.info.totalrecords.toLocaleString();
 
     // console.log(data.aggregations.by_year.buckets[0].colors.by_color.buckets)
     res.render('stats', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums', stats: data });
 });
 
-
-
-router.get('/stats/:yearfrom-:yearto', async function(req, res, next) {
+router.get('/visualize/:yearfrom-:yearto', async function(req, res, next) {
   let criteria = {
-    q: `accessionyear:>=${req.params.yearfrom} AND accessionyear:<=${req.params.yearto}`,
+    q: `accesslevel:1 AND accessionyear:>=${req.params.yearfrom} AND accessionyear:<=${req.params.yearto}`,
     size: 100,
     fields: 'title,images,colors,classification,accessionyear,dated,datebegin,dateend,objectnumber,rank,totalpageviews,gallery',
     sort: 'objectnumber.exact',
@@ -125,13 +138,16 @@ router.get('/stats/:yearfrom-:yearto', async function(req, res, next) {
   
   let output = {
     acquisitioncount: objects.length.toLocaleString(),
+    yearrange: {
+      start: req.params.yearfrom,
+      end: req.params.yearto
+    },
     groups: groups,
     years: _.keys(groups)
   };
 
   res.render('year', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums', data:output });
 });
-
 
 router.get('/future-minded', async function(req, res, next) {
   let criteria = {

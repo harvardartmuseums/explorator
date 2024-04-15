@@ -1,33 +1,33 @@
 <div class="container mb-4 mt-4">
 
-<h1 class="mb-4">{{data.acquisitioncount}} acquisitions</h1>
+    <h1 class="mb-4">{{data.acquisitioncount}} acquisitions from {{data.yearrange.start}} to {{data.yearrange.end}}</h1>
 
-{{#each data.groups}}
-    <div class="row">
-        <div class="col-12">
-            <div class="bg-dark" style="height: 15px;"></div>
-        </div> 
-    </div>
-    <div class="row">
-        <div class="col-3">
-            <h2>{{@key}}</h2>
-            <h3>{{this.length}} objects</h3>
+    {{#each data.groups}}
+        <div class="row">
+            <div class="col-12">
+                <div class="bg-dark" style="height: 15px;"></div>
+            </div> 
         </div>
-        <div class="col-9">
-            {{#each this}}    
-                <a href="https://hvrd.art/o/{{id}}" target="_blank">
-                {{#if colors}}
-                <div style="width:90%;height:10px;background:{{makeGradient colors}};"></div>
-                {{else}}
-                <div style="width:90%;height:10px;background:#000000;"></div>
-                {{/if}}
-                {{!-- <div><img src="{{images.0.baseimageurl}}:IMAGE/full/!36,36/0/default.jpg"></div> --}}
-                {{#if futureminded}}
-                <div style="width:10%;height:10px;background:#ff0000;float:right"></div>
-                {{/if}}
-                </a>
-            {{/each}}
+        <div class="row">
+            <div class="col-3">
+                <h2>{{@key}}</h2>
+                <h3>{{this.length}} objects</h3>
+            </div>
+            <div class="col-9">
+                {{#each this}}    
+                    <a href="https://hvrd.art/o/{{id}}" target="_blank">
+                    {{#if colors}}
+                    <div style="width:90%;height:10px;background:{{makeGradient colors}};"></div>
+                    {{else}}
+                    <div style="width:90%;height:10px;background:#000000;"></div>
+                    {{/if}}
+                    {{!-- <div><img src="{{images.0.baseimageurl}}:IMAGE/full/!36,36/0/default.jpg"></div> --}}
+                    {{#if futureminded}}
+                    <div style="width:10%;height:10px;background:#ff0000;float:right"></div>
+                    {{/if}}
+                    </a>
+                {{/each}}
+            </div>
         </div>
-    </div>
-{{/each}}
+    {{/each}}
 </div>
