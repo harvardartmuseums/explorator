@@ -6,7 +6,7 @@
 <section class="container-fluid">
 	<div x-data="recordlist">
     	<div x-show="isLoading" x-text="statusMessage" class="h2"></div>
-		<div x-show="!isLoading">
+		<div x-show="!isLoading" class="mb-4">
 			<label>Show me </label>
 			<select x-model="criteria.named.classification" @change="filter">
 				<option value="any">anything</option>
@@ -39,15 +39,15 @@
 			</select>
 			<label>, exhibited </label>
 			<select x-model="criteria.q.exhibitioncount" @change="filter">
-			<option value=">-1">or not</option>
+				<option value=">-1">or not</option>
 				<option value="0">0 times</option>
 				<option value=">1">more than 1 time</option>
 				<option value=">10">more than 10 times</option>
 				<option value=">20">more than 20 times</option>				
 			</select>
-			<label>, and accessed online </label>
+			<label>, accessed online </label>
 			<select x-model="criteria.q.totalpageviews" @change="filter">
-			<option value=">-1">or not</option>
+				<option value=">-1">or not</option>
 				<option value="0">0 times</option>
 				<option value=">1">more than 1 time</option>
 				<option value=">10">more than 10 times</option>
@@ -55,6 +55,14 @@
 				<option value=">1000">more than 1000 times</option>				
 				<option value=">10000">more than 10000 times</option>				
 			</select>
+			<label>, and </label>
+			<select x-model="criteria.q.imagecount" @change="filter">
+				<option value=">-1">has any number of</option>
+				<option value="0">has zero</option>
+				<option value=">0">has 1 or more</option>
+				<option value=">=5">has 5 or more</option>
+				<option value=">=10">has 10 or more</option>
+			</select> images.
 		</div>		
 		<div>
 			<template x-for="record in records">
@@ -85,7 +93,8 @@
 					accesslevel: 1,
 					exhibitioncount: '>-1',
 					publicationcount: '>-1',
-					totalpageviews: '>-1'
+					totalpageviews: '>-1',
+					imagecount: '>-1'
 				},
 				named: {
 					classification: 'any'
