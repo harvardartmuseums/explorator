@@ -25,7 +25,7 @@
 			<select x-model="criteria.q.accessionmethod" @change="filter">
 				<option value="*">any method</option>
 				<template x-for="facet in facets.by_accessionmethod.buckets">
-					<option :value="facet.key" :selected="facet.key === criteria.q.accessionmethod" x-text="`${facet.key} (${facet.doc_count})`"></option>
+					<option :value='`"${facet.key}"`' :selected='`"${facet.key}"` === criteria.q.accessionmethod' x-text="`${facet.key} (${facet.doc_count})`"></option>
 				</template>
 			</select>			
 			that's been 
@@ -74,7 +74,7 @@
   			<button class="btn btn-primary btn-lg w-100 p-4" type="button" @click="nextPage">Show me a bit more</button>
 		</div>	
 	</div>
-	<div id="popup" class="p-1 bg-light position-absolute w-25"></div>
+	<div id="popup" style="visibility: hidden;" class="p-1 bg-light position-absolute w-25"></div>
 </section>
 <footer class="page-footer grey darken-1 font-small p-3">
 	<div class="container-responsive text-left">Another R&D project from the department of Digital Infrastructure and Emerging Technology. Built with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>.</div>
@@ -218,7 +218,7 @@
 				this.popup.innerText = `${record.title}
 										 ${record.classification}
 										 Ranked #${record.rank}
-										 ${record.accessionyear == null ? 'Accession year unknown' : 'Accessioned in ' + record.accessionyear } via ${record.accessionmethod}`;
+										 ${record.accessionyear == -1 ? 'Accession year unknown' : 'Accessioned in ' + record.accessionyear } via ${record.accessionmethod}`;
 										 
 				this.popup.style.visibility = 'visible';
 			},
