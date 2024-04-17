@@ -11,6 +11,10 @@
             <hr>
             <p>I'm a <span class="text-lowercase">{{object.worktypes.[0].worktype}}</span> in the division of {{object.division}}.</p>
         </div>
+        <div class="d-none" id="hint-2">
+            <hr>
+            <p>Claude says... {{object.images.[0].anthropicaidescription}}</p>
+        </div>        
         <div class="d-none" id="answer">
             <img class="img-fluid" alt="{{object.images.[0].alttext}}" src="{{object.images.[0].baseimageurl}}">
             <p>
@@ -35,6 +39,7 @@
     let hintButtonText = [
         `My memory is fuzzy. Give me a hint.`,
         `I still don't see it. Give me another hint.`,
+        `Hmm... What does Claude say?`,
         `Ok. I give up. Show me the image.`
     ];
 

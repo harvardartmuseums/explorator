@@ -67,6 +67,20 @@ router.get('/alt-text/roulette', async function(req, res, next) {
   let object = await HAM.Objects.search(criteria);
   let record = object.records[0];
 
+  criteria = {
+    image: record.images[0].imageid,
+    size: 1,
+    fields: 'body,imageid,source',
+    q: 'source: "Anthropic"'
+  };
+  let annotations = await HAM.Annotations.search(criteria);
+
+  if (annotations.records.length == 1) {
+    record.images[0].anthropicaidescription = annotations.records[0].body;
+  } else {
+    record.images[0].anthropicaidescription = "Mum's the word.";
+  }
+
   res.render('roulette', {layout: '../../core/views/layout.hbs', title: 'Alt Text Roulette | Image Explorer | Explorator | Harvard Art Museums', object: record});
 });
 
