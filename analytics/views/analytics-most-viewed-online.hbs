@@ -2,6 +2,7 @@
 	<h1>What's popular online?</h1>
 	<p class="lead">Top hits from the past 10+ years</p>
 </header>
+<section id="loading"><div class="h2 p-2" id="loading-message">Loading stats...</div></section>
 <section id="top-lists"></section>
 <section id="object-details-panel" class="modal fade right" tabindex="-1" role="dialog">
 	<div class="modal-dialog modal-full-height modal-right">
@@ -155,6 +156,7 @@
 
 		let years = data.aggregations.by_year.buckets;
 		for (let d of years) {
+			document.getElementById('loading-message').innerText = `Loading stats for ${d.key_as_string}...`;
 			d.index = new Date().getFullYear() - d.key_as_string;
 
 			let idList = d.by_object.buckets.map(o => o.key).join("|");
@@ -183,6 +185,9 @@
 
 			renderObjectDetails(objectID);
 		});			
+
+		document.getElementById('loading').style.display = 'none';
+
 	}
 
 	function renderYear(data) {
