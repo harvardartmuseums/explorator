@@ -62,12 +62,17 @@
 				<option value=">0">has 1 or more</option>
 				<option value=">=5">has 5 or more</option>
 				<option value=">=10">has 10 or more</option>
-			</select> images.
+			</select> images. 
+			<label>Show me the items as </label>
+			<select x-model="visualizer" @change="visualize">
+				<option value="0">images</option>
+				<option value="1">colors</option>
+			</select>.
 		</div>
 		<div class="h4">Rummaging through <span x-text="stats.currentrecordcount.toLocaleString()"></span> items. <span x-text="(stats.totalrecordcount-stats.currentrecordcount).toLocaleString()"></span> left behind.</div>
 		<div>
 			<template x-for="record in records">
-				<a :href="`${record.url}`"><img style="width: 150px;height:150px;overflow:hidden" @mousemove="showPopUp($event,record)" @mouseout="hidePopUp()" :src="`${record.primaryimageurl}`"></a>
+				<a :href="`${record.url}`"><img :style="`width:150px;height:150px;overflow:hidden;background:${record.primarycolor}`" @mousemove="showPopUp($event,record)" @mouseout="hidePopUp()" :data-src="`${record.primaryimageurl}`" :src="visualizer == 0 ? record.primaryimageurl : '/images/transparent.png'"></a>
 			</template>
 		</div>
 		<div class="d-grid mt-4 mb-4">
@@ -86,6 +91,7 @@
             isLoading: false,
             statusMessage: 'Rummaging...',
 			popup: document.getElementById("popup"),
+			visualizer: 0,
 			page: 1,
 			records: [],
 			stats: {
@@ -119,6 +125,18 @@
 			reset() {
 				this.page = 1;
 				this.records = [];
+			},
+
+			visualize() {
+				if (this.visualizer == 0) {
+					document.getElementsByTagName('img').forEach(i => {
+						i.src = i.dataset.src;
+					})
+				} else {
+					document.getElementsByTagName('img').forEach(i => {
+						i.src = '/images/transparent.png';
+					})
+				}
 			},
 
 			async filter() {
@@ -189,7 +207,7 @@
                 let urlParameters = new URLSearchParams({				
 					q: this.expandCriteria(),
 					...this.criteria.named,
-					fields: 'primaryimageurl,url,title,rank,classification,accessionyear,accessionmethod',
+					fields: 'primaryimageurl,url,title,rank,classification,accessionyear,accessionmethod,colors',
 					page: this.page,
 					sort: this.sort,
 					sortorder: this.sortorder,
@@ -204,6 +222,11 @@
 						r.primaryimageurl = '/images/Image-Unavailable.jpg';
 					} else {
 						r.primaryimageurl += ':IMAGE/square/!150,150/0/default.jpg';	
+					}
+					if (r.colors === undefined) {
+						r.primarycolor = '#000000';
+					} else {
+						r.primarycolor = r.colors[0].color;
 					}
 				}
 				
