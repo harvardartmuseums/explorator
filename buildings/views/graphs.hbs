@@ -27,7 +27,7 @@
 		<select x-model="filterSelection.classification" x-on:change="filter">
 			<option value="">anything</option>
 			<template x-for="classification in filters.classifications" >
-        		<option x-value="classification.id" x-text="classification.name"></option>
+				<option :value="classification.name" :selected="classification.name === filterSelection.classification" x-text="`${classification.name} (${classification.count})`"></option>
     		</template>
 		</select>
 		<label>installed during the past</label>
