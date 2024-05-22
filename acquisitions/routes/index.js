@@ -16,6 +16,10 @@ router.get('/stats', async function(req, res, next) {
         q: 'accesslevel:1'
     }
     
+    if (req.query.department) {
+      criteria.q += ` AND department:"${req.query.department}"`;  
+    }
+
     if (req.query.year) {
       criteria.q += ` AND accessionyear:>=${req.query.year}`;
     } else {
@@ -56,7 +60,13 @@ router.get('/stats', async function(req, res, next) {
                 "field": "division",
                 "size": 10
               }
-            },            
+            }, 
+            "by_department": {
+              "terms": {
+                "field": "department",
+                "size": 20
+              }
+            },                        
             "by_accessionmethod": {
               "terms": {
                 "field": "accessionmethod",

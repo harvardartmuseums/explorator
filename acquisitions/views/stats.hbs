@@ -17,6 +17,9 @@
 
     <h2>Classification</h2>
     <div id="classification-ridgeline-plot" style="position: relative;left: -174px"></div>
+
+    <h2>Department</h2>
+    <div id="department-ridgeline-plot" style="position: relative;left: -174px"></div>
 </div>
 <footer class="page-footer grey darken-1 font-small p-3">
 	<div class="container-responsive text-left">Another R&D project from the department of Digital Infrastructure and Emerging Technology. Built with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>.</div>
@@ -131,5 +134,34 @@
 
         div = document.getElementById("classification-ridgeline-plot");
         div.append(plotClassRidgeline);           
+
+        // Plot 5 - department
+        const dataDepartment = [
+        {{#each stats.aggregations.by_year.buckets}}
+            {{#each by_department.buckets}}
+                {year:"{{../key_as_string}}", count:{{doc_count}}, department:"{{key}}"},
+            {{/each}}
+        {{/each}}
+        ];
+
+
+        const plotDeptRidgeLine = Plot.plot({
+            height: 40 + new Set(dataDepartment.map(d => d.department)).size * 17,
+            width: 1000,
+            marginBottom: 1,
+            marginLeft: 220,
+            x: {axis: "top", type: "band"},
+            y: {axis: null, range: [2.5 * 17 - 2, (2.5 - 3.5) * 17 - 2]},
+            fy: {label: null, domain: dataDepartment.map(d => d.department)}, // preserve input order
+            marks: [
+                d3.groups(dataDepartment, d => d.department).map(([, counts]) => [
+                    {{!-- Plot.areaY(counts, {x: "year", y: "count", fy: "department", curve: "basis", sort: "year", fill: "#ccc"}), --}}
+                    Plot.lineY(counts, {x: "year", y: "count", fy: "department", curve: "basis", fill: "#ccc", sort: "year", stroke: "currentColor", strokeWidth: 1})
+                ])
+            ]
+        });        
+
+        div = document.getElementById("department-ridgeline-plot");
+        div.append(plotDeptRidgeLine);           
     }
 </script>
