@@ -14,6 +14,13 @@
 					<option :value="facet.key" :selected="facet.key === criteria.named.classification" x-text="`${facet.key} (${facet.doc_count})`"></option>
 				</template>
 			</select>
+			<label> cared for by </label>
+			<select x-model="criteria.q.department" @change="filter">
+				<option value="*">any department</option>
+				<template x-for="facet in facets.by_department.buckets">
+					<option :value='`"${facet.key}"`' :selected='`"${facet.key}"` === criteria.q.department' x-text="`the ${facet.key} (${facet.doc_count})`"></option>
+				</template>
+			</select>			
 			<label> acquired in </label>
 			<select x-model="criteria.q.accessionyear" @change="filter">
 				<option value="*">any year</option>
@@ -27,7 +34,8 @@
 				<template x-for="facet in facets.by_accessionmethod.buckets">
 					<option :value='`"${facet.key}"`' :selected='`"${facet.key}"` === criteria.q.accessionmethod' x-text="`${facet.key} (${facet.doc_count})`"></option>
 				</template>
-			</select>			
+			</select>		
+					
 			that's been 
 			<label> published </label>
 			<select x-model="criteria.q.publicationcount" @change="filter">
@@ -105,10 +113,11 @@
 					exhibitioncount: '>-1',
 					publicationcount: '>-1',
 					totalpageviews: '>-1',
-					imagecount: '>-1'
+					imagecount: '>-1',
+					department: '*'
 				},
 				named: {
-					classification: 'any'
+					classification: 'any',
 				},
 			},
 			sort: 'rank',
@@ -187,6 +196,12 @@
 						terms: {
 							field: "accessionmethod",
 							size: 150
+						}
+					},
+					"by_department": {
+						terms: {
+							field: "department",
+							size: 25
 						}
 					}
 				};
