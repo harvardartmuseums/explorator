@@ -69,6 +69,17 @@ router.get('/data/timeline', async function(req, res, next) {
   res.json(events);
 });
 
+router.get('/floorplan', async function(req, res, next) {
+  let params = {
+    venue: "HAM",
+    after: "begindate:2014-11-15",
+    size:100,
+    sort: "chronological"
+  }
+  let exhibitions = await HAM.Exhibitions.search(params)
+  res.render('floorplan', {layout: '../../core/views/layout.hbs', title: 'Floorplan Explorer | Explorator | Harvard Art Museums', data: exhibitions.records });
+});
+
 router.get('/:id', async function(req, res, next) {
   let exhibition = await HAM.Exhibitions.get(req.params.id);
 
