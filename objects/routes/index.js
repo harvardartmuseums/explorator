@@ -1,13 +1,13 @@
 var router = require("express-promise-router")();
 const ham  = require('@harvardartmuseums/ham');
 const _ = require('lodash');
-const list = require('../public/data/list');
+
 
 let HAM = new ham(process.env.apikey);
 
 /* GET the main image page. */
 router.get('/', function(req, res, next) {
-    res.render('index', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums' });
+  res.render('index', {layout: '../../core/views/layout.hbs', title: 'Objects Explorer | Explorator | Harvard Art Museums' });
 });
 
 router.get('/stats', async function(req, res, next) {
@@ -112,11 +112,6 @@ router.get('/visualize/:yearfrom-:yearto', async function(req, res, next) {
   let now = new Date();
     
   for (let r of objects) {
-      // is the object in the future minded exhibition???
-      r.futureminded = 0;
-      if (list.includes(r.id)) {
-        r.futureminded = 1;
-      }
 
       // calculate the age of the object
       if (r.datebegin && r.dateend) {
@@ -159,16 +154,86 @@ router.get('/visualize/:yearfrom-:yearto', async function(req, res, next) {
   res.render('year', {layout: '../../core/views/layout.hbs', title: 'Acquisitions Explorer | Explorator | Harvard Art Museums', data:output });
 });
 
-router.get('/future-minded', async function(req, res, next) {
-  let criteria = {
-    id: list.join("|"),
-    size: 100,
-    fields: 'id,titles,images,classification,accessionyear,colors,objectnumber,url'
-  }
+router.get('/ancient', async function(req, res, next) {
+    let params = {
+        q: `accesslevel:1 AND department:"Department of Ancient and Byzantine Art & Numismatics"`,
+        size:100,
+        sort: 'random'
+    }
+    let aggs = {
+      'by_floor': {
+          "terms": {
+            "field": "gallery.floor",
+            "size": 10,
+            "order": { "_key": "asc" }     
+        }
+      },
+      "by_accessionmethod": {
+        "terms": {
+          "field": "accessionmethod",
+          "size": 20
+        }
+      },
+      "by_classification": {
+        "terms": {
+          "field": "classification.exact",
+          "size": 100
+        }
+      }, 
+      "by_pageviews": {
+        "range": {
+          "field": "totalpageviews",
+          "keyed": true,
+          "ranges": [
+            { "key": "None", "to": 1 },
+            { "key": "Some", "from": 1, "to": 10 },
+            { "key": "Many", "from": 10, "to": 1000 },
+            { "key": "Very Many", "from": 1000, "to": 5000 },
+            { "key": "A Lot", "from": 5000 },
+          ]
+        }                
+      },
+      "by_exhibitioncount": {
+        "range": {
+          "field": "exhibitioncount",
+          "keyed": true,
+          "ranges": [
+            { "key": "None", "to": 1 },
+            { "key": "Some", "from": 1, "to": 10 },
+            { "key": "Many", "from": 10 }
+          ]
+        }
+      },
+      // "by_exhibitioncount": {
+      //   "histogram": {
+      //       "field": "exhibitioncount",
+      //       "interval": 1,
+      //       "order": {"_key": "desc"},
+      //       "extended_bounds": {
+      //         "min": 0.0,
+      //         "max": 20.0
+      //       }
+      //   }
+      // }
+    }
+    let objects = await HAM.Objects.search(params, aggs);
 
-  let data = await HAM.Objects.search(criteria);
+    objects.info.totalrecordsString = objects.info.totalrecords.toLocaleString();
 
-  res.render('future-minded', {layout: '../../core/views/layout.hbs', title: 'Future Minded | Explorator | Harvard Art Museums', data: data });
-});
+    for (let r of objects.records) {
+      if (r.primaryimageurl === undefined) {
+        r.primaryimageurl = '/images/Image-Unavailable.jpg';
+      } else {
+        r.primaryimageurl += ':IMAGE/square/!150,150/0/default.jpg';	
+      }
+      if (r.colors === undefined) {
+        r.primarycolor = '#000000';
+      } else {
+        r.primarycolor = r.colors[0].color;
+      }
+    }
+
+    res.render('ancient', {layout: '../../core/views/layout.hbs',  title: 'Objects Explorer | Explorator | Harvard Art Museums', objects: objects});
+})
 
 module.exports = router;
