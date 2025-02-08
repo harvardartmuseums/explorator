@@ -1,0 +1,18 @@
+<header class="jumbotron grey lighten-4">
+    <h1>Scrapbooks</h1>
+    <p class="lead">Ctrl-C, Ctrl-V</p>
+</header>
+
+<div class="container">
+    <h2>Fogg Art Museum</h2>
+    {{#data.fogg.records}}
+        {{objectnumber}}, {{title}}, {{dated}} ({{datebegin}})<br/>
+    {{/data.fogg.records}}
+    <br>
+    <h2> Busch-Reisinger Museum</h2>
+    {{#data.busch.records}}
+        {{objectnumber}}, {{title}}, {{dated}} ({{datebegin}})<br/>
+    {{/data.busch.records}}
+</div>
+
+<footer></footer>

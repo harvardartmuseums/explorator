@@ -36,6 +36,7 @@ app.use('/data', data);
 app.use('/analytics', analytics);
 app.use('/people', people);
 app.use('/sketchbooks', sketchbooks);
+app.use('/books', sketchbooks);
 app.use('/images', images);
 app.use('/color', color);
 app.use('/exhibitions', exhibitions);
