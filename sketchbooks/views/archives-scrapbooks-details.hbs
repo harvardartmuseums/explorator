@@ -4,15 +4,10 @@
 </header>
 
 <div class="container">
-    <h2>Fogg Art Museum</h2>
-    {{#data.fogg.records}}
-        <a href="scrapbooks/{{id}}">{{objectnumber}}</a>, {{title}}, {{dated}} ({{datebegin}},{{dateend}})<br/>
-    {{/data.fogg.records}}
-    <br>
-    <h2> Busch-Reisinger Museum</h2>
-    {{#data.busch.records}}
-        {{objectnumber}}, {{title}}, {{dated}} ({{datebegin}},{{dateend}})<br/>
-    {{/data.busch.records}}
+    <h2>{{data.title}}, {{data.dated}}</h2>
+    {{#data.images}}
+        <a href="{{../data.objectid}}/page/{{imageid}}"><img src="{{baseimageurl}}:IMAGE/full/!200,200/0/default.jpg"></a>
+    {{/data.images}}
 </div>
 
 <footer class="page-footer grey darken-1 font-small p-3 mt-4">

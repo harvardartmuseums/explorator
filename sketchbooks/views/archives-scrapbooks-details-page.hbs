@@ -1,0 +1,40 @@
+<header class="jumbotron grey lighten-4">
+    <h1>Archives Scrapbooks</h1>
+    <p class="lead">Ctrl-C, Ctrl-V. Rinse, repeat.</p>
+</header>
+
+<div class="container">
+    <h2>{{data.object.title}}, {{data.object.dated}}</h2>
+    <div>
+        <div class="row">
+            <div class="col">
+                <div id="openseadragon1" style="width: 600px; height: 800px;"></div>
+                <div>{{data.image.caption}}</div>
+            </div>
+            <div class="col">
+                {{#data.annotations.records}}
+                    {{body}}<br/>   
+                {{/data.annotations.records}}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer class="page-footer grey darken-1 font-small p-3 mt-4">
+	<div class="container-responsive text-left">
+		Another R&amp;D project from the department of Digital Infrastructure and Emerging Technology at Harvard Art Museums
+	</div>	
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/openseadragon@5.0/build/openseadragon/openseadragon.min.js"></script>
+<script type="text/javascript">
+    var viewer = OpenSeadragon({
+        id: "openseadragon1",
+        prefixUrl: "https://cdn.jsdelivr.net/npm/openseadragon@5.0/build/openseadragon/images/", 
+        tileSources: [
+            "{{data.image.iiifbaseuri}}/info.json"
+        ]
+    });
+</script>     

@@ -57,5 +57,23 @@ router.get('/archives/scrapbooks', async function(req, res, next) {
   res.render('archives-scrapbooks', {layout: '../../core/views/layout.hbs', title: 'Archives Scrapbooks | Explorer | Book Explorer | Explorator | Harvard Art Museums', data: data });
 });
 
+router.get('/archives/scrapbooks/:id', async function(req, res, next) {
+  let data = await HAM.Objects.get(req.params.id);
 
+  res.render('archives-scrapbooks-details', {layout: '../../core/views/layout.hbs', title: 'Archives Scrapbooks | Explorer | Book Explorer | Explorator | Harvard Art Museums', data: data });
+});
+
+router.get('/archives/scrapbooks/:id/page/:imageid', async function(req, res, next) {
+  let data = {
+    object: {},
+    image: {},
+    annotations: {}
+  };
+
+  data.object = await HAM.Objects.get(req.params.id);
+  data.image = await HAM.Images.get(req.params.imageid);
+  data.annotations = await HAM.Annotations.search({image: req.params.imageid, size:200});
+
+  res.render('archives-scrapbooks-details-page', {layout: '../../core/views/layout.hbs', title: 'Archives Scrapbooks | Explorer | Book Explorer | Explorator | Harvard Art Museums', data: data });
+});
 module.exports = router;
