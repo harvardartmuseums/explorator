@@ -1,0 +1,154 @@
+
+<header class="jumbotron grey lighten-4">
+    <h1>Art Typewriter</h1>
+    <p class="lead"></p>
+</header>
+
+<div class="container">
+	<div class="input-group">
+		<input type="text" id="term" class="form-control" placeholder="">
+    	<button id="reset" class="" type="button">Start Over</button>
+	</div>
+	<div id="message-panel" class="p-4"></div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script type="text/javascript">
+	var messages = [];
+
+	function clearMessages() {
+		$(".full-image").remove();
+
+		messages = [];
+		$("#message-panel").empty();
+		$("#term").val("").focus();
+	}
+
+	function processPhrase() {
+		var message = $("#term").val();
+		var terms = message.trim().split(" ");
+		messages.push(message);
+
+		var m = $("<div/>")
+					.attr("id", `message-${messages.length}`)
+					.attr("data-message-number", messages.length);
+		$("#message-panel").append(m);
+
+		for (var i = 0; i < terms.length; i++) {
+			if (term[i] != "") {
+				var img = $("<img/>")
+							.attr("alt", terms[i])
+							.attr("id", "position-" + i)
+							.dblclick(showFullImage);
+				$(m).append(img);
+
+				fetchTermImages(terms[i], img);
+			}
+		}	 			
+	}
+
+	async function fetchTermImages(term, messageContainer) {
+        let url = `data/terms/${term}`;
+        const response = await fetch(url);
+        const terms = await response.json();
+
+        var randomImage =  terms[Math.floor(Math.random()*terms.length)];
+        fragmentCoords = randomImage.selectors[0].value.replace("xywh=","");
+        iiifImageFragment = randomImage.target.replace("full/full", fragmentCoords + "/full");
+
+        vertices = fragmentCoords.split(",");
+        randomImage.vertices = {};
+        randomImage.vertices.x = vertices[0];
+        randomImage.vertices.y = vertices[1];
+
+        $(messageContainer)
+            .data("info", randomImage)
+			.data("id", randomImage.imageid)
+            .attr("src", iiifImageFragment);
+	}
+
+    async function showFullImage(e) {
+        let rect = e.target.getBoundingClientRect();
+        let pos = { 
+                top: rect.top + window.scrollY, 
+                left: rect.left + window.scrollX, 
+            };
+        let id = e.target.id;
+        let word = $(e.target).data().info;
+
+		let x = pos.left - (word.vertices.x);
+		let y = pos.top - (word.vertices.y);
+
+        let url = `/magic/data/images/${word.imageid}/objects?size=1`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Build the container to hold the object 
+		let container = document.createElement("div");
+        container.style = `z-index: 100000; position: absolute; top: ${y}px; left: ${x}px`;
+        container.classList.add("draggable", "full-image");
+		container.ondblclick = (function() {$(this).remove();});
+
+		// Build the image
+		let fullImage = document.createElement("img");
+        fullImage.src = word.target;
+		
+        container.appendChild(fullImage);
+
+		// Build the object info panel
+		let infoPanel = document.createElement("div");
+		infoPanel.classList.add("info-panel", "container");
+
+        let description = `It's a ${data.records[0].worktypes[0].worktype} titled ${data.records[0].title}.<br/>`;
+        let link = document.createElement("a");
+        link.href = data.records[0].url;
+        link.target = "_blank";
+        link.innerHTML = "Read more about it.";
+        
+        infoPanel.innerHTML = description;
+        infoPanel.append(link);
+        
+        container.appendChild(infoPanel);
+        
+        document.body.appendChild(container);
+
+        interact(container).draggable({onmove: dragMoveListener});
+    }
+
+    function dragMoveListener (e) {
+        var target = e.target,
+        // keep the dragged position in the data-x/data-y attributes
+        x = (parseFloat(target.getAttribute('data-x')) || 0) + e.dx,
+        y = (parseFloat(target.getAttribute('data-y')) || 0) + e.dy;
+
+        // translate the element
+        target.style.webkitTransform =
+        target.style.transform = `translateX(${x}px) translateY(${y}px)`;
+
+        // update the posiion attributes
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+		$("#go").click(processPhrase);
+		$("#reset").click(clearMessages);
+
+		$("#term").keypress(function(event) {
+			if (event.which == 13 || event.which == 32) {
+				processPhrase()
+		 	} else if (event.which == 48) {
+		 		clearMessages();
+		 	}
+		 });	
+
+		$("#term").keyup(function(event) {
+			if ($("#term").val() === "") {
+				clearMessages();
+			}
+		});
+
+		$("#term").focus();
+	});	
+</script>

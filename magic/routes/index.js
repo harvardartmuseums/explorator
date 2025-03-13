@@ -13,10 +13,15 @@ router.get('/poetry', function(req, res, next) {
     res.render('poetry', {layout: '../../core/views/layout.hbs', title: 'Magnetic Poetry | Magic | Explorator | Harvard Art Museums'});
 });
 
+/* GET the exhibition timeline page. */
+router.get('/typewriter', function(req, res, next) {
+    res.render('typewriter', {layout: '../../core/views/layout.hbs', title: 'Art Typewriter | Magic | Explorator | Harvard Art Museums'});
+});
+
 router.get('/data/terms/:term', async function(req, res, next) {
   let term = req.params.term;
   let criteria = {
-    q: "type:text AND body:" + term,
+    q: `type:text AND (body:${term}) AND ${term} AND accesslevel:1`,
     fields: "id,body,target,imageid,selectors",
     sort: "random",
     size: req.query.size || 25
@@ -34,7 +39,7 @@ router.get('/data/terms/:term', async function(req, res, next) {
   res.json(terms);
 });
 
-router.get('/data/images/:imageid/objects', function(req, res, next) {
+router.get('/data/images/:imageid/objects', async function(req, res, next) {
 	let imageid = req.params.imageid;
   let criteria = {
     q: `images.imageid:${imageid}`,
