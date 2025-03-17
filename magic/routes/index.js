@@ -1,5 +1,8 @@
 var router = require("express-promise-router")();
 var ham = require('@harvardartmuseums/ham');
+var objectHelper = require('../helpers/object-helper');
+var aiWriter = require('../helpers/ai-writer');
+const { round } = require("lodash");
 
 let HAM = new ham(process.env.apikey);
 
@@ -16,6 +19,30 @@ router.get('/poetry', function(req, res, next) {
 /* GET the exhibition timeline page. */
 router.get('/typewriter', function(req, res, next) {
     res.render('typewriter', {layout: '../../core/views/layout.hbs', title: 'Art Typewriter | Magic | Explorator | Harvard Art Museums'});
+});
+
+router.get('/crosstalk', async function(req, res, next) {
+  let criteria = {
+    gallery: 1220,
+    sort: "random",
+    size: 2,
+    fields: "title,primaryimageurl,objectid,colors,url"
+  };
+
+  let objects = await HAM.Objects.search(criteria);
+  
+  res.render('crosstalk', {
+                layout: '../../core/views/layout.hbs', 
+                title: 'Crosstalk | Explorator | Harvard Art Museums',
+                objects: objects.records});
+});
+
+router.get('/crosstalk/generate/:objectid0-:objectid1', async function (req, res, next) {
+  let object0 = await objectHelper.getObject(req.params.objectid0)
+  let object1 = await objectHelper.getObject(req.params.objectid1)
+
+  let dialog = await aiWriter.generateStory(object0, object1);
+  res.json({dialog: dialog});
 });
 
 router.get('/data/terms/:term', async function(req, res, next) {

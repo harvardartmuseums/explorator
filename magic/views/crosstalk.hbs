@@ -1,0 +1,151 @@
+<style>
+    header {
+        opacity: 1;
+        transition: opacity 2s;
+    }
+    .hide {
+        opacity: 0;
+    }
+    .show {
+        opacity: 1;
+    }
+    .fade-50 {
+        opacity: 0.5;
+    }
+    img {
+        opacity: 1;
+        transition: opacity 1s;
+    }
+</style>
+
+<header class="jumbotron grey lighten-4">
+    <h1>Crosstalk</h1>
+    <p class="lead">What do you have to say for yourself?</p>
+</header>
+
+<main x-data="chat" class="overflow-hidden w-100 h-100">
+<div class="container-fluid h-50 position-absolute top-50 start-50 translate-middle text-center">
+    <div class="row h-100 justify-content-md-center">
+        <div class="col-md-4 align-self-center">
+            <figure>
+                <img id="object-image-0" class="rounded" src="{{objects.0.primaryimageurl}}:IMAGE/full/!300,300/0/default.jpg">
+                <figcaption x-show="state === 'complete'"><a href="{{objects.0.url}}" target="_blank">{{objects.0.title}}</a></figcaption>
+            </figure>
+        </div>
+        <div class="col-md-4 align-self-center">
+            <button x-show="state === 'new'" x-on:click="startChat" class="btn btn-lg">Let's Dialog</button>
+            <div x-show="state === 'loading'" class="h2 text-start" id="loader"></div>
+            <div x-show="state === 'chatting'" class="h2 text-start" id="dialog"></div>
+            <div x-show="state === 'complete'" class="text-start h-100" style="overflow-y: scroll;" id="chat"></div>             
+        </div>
+        <div class="col-md-4 align-self-center">
+            <figure>
+                <img id="object-image-1" class="rounded" src="{{objects.1.primaryimageurl}}:IMAGE/full/!300,300/0/default.jpg">
+                <figcaption x-show="state === 'complete'"><a href="{{objects.1.url}}" target="_blank">{{objects.1.title}}</a></figcaption>
+            </figure>            
+        </div>
+    </div>
+</div>
+</main>
+
+<footer class="m-4 p-4"><p></p></footer>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('chat', () => ({
+            state: 'new',
+            chatter: -1,
+            colors: [
+                {{#each objects.0.colors}}
+                    '{{color}}',
+                {{/each}}
+                {{#each objects.1.colors}}
+                    '{{color}}',
+                {{/each}}
+            ],
+            dialog: [],
+
+            init() {},
+
+            startChat() {
+                this.state = 'loading';
+                let counter = 0;
+                let loader = new TypeIt("#loader", {
+                        speed: 75,
+                        loop: true,
+                        afterString: async (characters, instance) => {
+                            instance.getElement().style.color = this.colors[counter];
+                            document.getElementsByClassName('ti-cursor')[0].style.color = this.colors[counter];
+                            counter +=1;
+                            if (counter >= this.colors.length) {
+                                counter = 0;
+                            }
+                        }
+                    })
+                    .type("Loading...").pause(1000).delete()
+                    .type("Mulling...").pause(1000).delete()
+                    .type("Thinking...").pause(1000).delete()
+                    .type("Pondering...").pause(1000).delete()
+                    .type("Contemplating...").pause(1000).delete()
+                    .type("Cogitating...").pause(1000).delete()
+                    .go();
+                
+                fetch('crosstalk/generate/{{objects.0.objectid}}-{{objects.1.objectid}}')
+                    .then(res => res.json())
+                    .then(res => {
+                        this.dialog = res.dialog;
+
+                        document.getElementsByTagName("header")[0].classList.add("hide");
+
+                        loader.reset();
+                        this.startTypewriter();
+                    })
+            },
+
+            async startTypewriter() {
+                let alternate = false;
+                let color;
+                let object0 = document.getElementById("object-image-0");
+                let object1 = document.getElementById("object-image-1");
+
+                this.state = 'chatting';
+                let typewriter = new TypeIt("#dialog", {
+                    speed: 75,
+                    startDelay: 2900,
+                    loop: false,
+                    beforeString: async (characters, instance) => {
+                        alternate = !alternate;
+                        if (alternate) {
+                            color = '{{objects.0.colors.[0].color}}';
+                            object0.classList.remove("fade-50");
+                            object1.classList.add("fade-50");
+                        } else {
+                            color = '{{objects.1.colors.[0].color}}';
+                            object1.classList.remove("fade-50");
+                            object0.classList.add("fade-50");
+                        }
+                        instance.getElement().style.color = color;
+                        document.getElementsByClassName('ti-cursor')[0].style.color = color;
+                    },
+                    afterComplete: async () => {
+                        this.state = 'complete';
+
+                        object0.classList.remove("fade-50");
+                        object1.classList.remove("fade-50");
+                        document.get
+                        document.getElementById("chat").innerHTML = this.dialog.join("<br/><br/>");
+                    }
+                });
+
+                for (let line of this.dialog) {
+                    typewriter
+                        .type(line)
+                        .pause(2000)
+                        .empty();
+                }
+                typewriter.go();
+            }
+        }))
+
+    });
+</script>
