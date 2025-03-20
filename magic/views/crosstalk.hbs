@@ -32,7 +32,7 @@
                 <figcaption x-show="state === 'complete'"><a href="{{objects.0.url}}" target="_blank">{{objects.0.title}}</a></figcaption>
             </figure>
         </div>
-        <div class="col-md-4 align-self-center">
+        <div class="col-md-4 d-flex align-items-center justify-content-center h-100">
             <button x-show="state === 'new'" x-on:click="startChat" class="btn btn-lg">Let's Dialog</button>
             <div x-show="state === 'loading'" class="h2 text-start" id="loader"></div>
             <div x-show="state === 'chatting'" class="h2 text-start" id="dialog"></div>
@@ -132,7 +132,7 @@
 
                         object0.classList.remove("fade-50");
                         object1.classList.remove("fade-50");
-                        document.get
+
                         document.getElementById("chat").innerHTML = this.dialog.join("<br/><br/>");
                     }
                 });
