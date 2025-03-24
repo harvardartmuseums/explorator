@@ -1,11 +1,12 @@
 const {AzureChatOpenAI} = require('@langchain/openai');
+const {ChatBedrockConverse} = require('@langchain/aws');
 const {ChatPromptTemplate} = require('@langchain/core/prompts');
 const _ = require('lodash');
 let striptags = require('striptags');
 
-const storieTypes = [
+const storyTypes = [
   {
-    type: 'melancholy',
+    name: 'Melancholy',
     description:           
       `Write a short fictious conversation between the two works of art.
       They are reflecting on their existence, pondering their pasts, and dreaming of the futures they hope to have. 
@@ -19,13 +20,15 @@ const storieTypes = [
       Wrap the facts in html <mark> tag. 
       
       Start the conversation from the point of view of the first work of art. 
-      Have it begin with the phrase \"We need to talk.\" 
+      Have it begin with the single phrase \"We need to talk.\"
       Then have the second work of art respond with the phrase \"Sure. What's on your mind?\"
       
+      Wrap each turn in the conversation with a <turn> tag.
+
       Do not include additional markup.`
   },
   {
-    type: 'escapism',
+    name: 'Escapism',
     description:  
       `Write a short fictious conversation between the two works of art.
       They are located in the same gallery but are tired of being there. 
@@ -44,13 +47,15 @@ const storieTypes = [
       Wrap the facts in html <mark> tag. 
       
       Start the conversation from the point of view of the first work of art. 
-      Have it begin with the phrase \"Psst. Hey, anyone out there?\" 
+      Have it begin with the single phrase \"Psst. Hey, anyone out there?\" 
       Then have the second work of art respond with the phrase \"Yeah. I'm here. Who are you?\"
       
+      Wrap each turn in the conversation with a <turn> tag.
+
       Do not include additional markup.`
   },  
   {
-    type: 'ghost', 
+    name: 'Ghost', 
     description: 
       `Write a short fictious conversation between the two works of art.
       They are located in the same gallery. 
@@ -65,31 +70,93 @@ const storieTypes = [
       Wrap the facts in html <mark> tag. 
       
       Start the conversation from the point of view of the first work of art. 
-      Have it begin with the phrase \"Who... who's there???\" 
+      Have it begin with the single phrase \"Who... who's there???\" 
       Then have the second work of art respond with the phrase \"It's me.\"
+      
+      Wrap each turn in the conversation with a <turn> tag.
       
       Do not include additional markup.
       `
   }
 ];
 
-async function generateStory(artwork, artwork1) {
-  if (process.env.AI_SERVICE != "none") {
-    storyFramework = _.sample(storieTypes);
-    return await aiStory(storyFramework, artwork, artwork1);
+const models = [
+  {
+    name: 'Cohere Command-R Plus',
+    id: 'cohere.command-r-plus-v1:0',
+    source: 'AWSBedrock'
+  },
+  {
+    name: 'OpenAI GPT-4o',
+    id: 'gpt-4o',
+    source: 'Azure'
+  },
+  {
+    name: 'Mistral Large',
+    id: 'mistral.mistral-large-2402-v1:0',
+    source: 'AWSBedrock'
+  },
+];
+
+function getModel(modelMetadata=models[1]) {
+  let model;
+
+  if (modelMetadata.source === 'Azure') {
+    model = new AzureChatOpenAI ({
+        modelName: modelMetadata.id,
+        temperature: 0.5,
+        maxTokens: 4096,
+        maxRetries: 5,
+    });
+
+  } else if (modelMetadata.source === 'AWSBedrock') {
+    model = new ChatBedrockConverse({
+      model: modelMetadata.id,
+      region: process.env.BEDROCK_AWS_REGION, 
+      credentials: {
+        accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY
+      },
+      temperature: 0.5,
+      maxTokens: 4096,
+      maxRetries: 5,      
+    });  
+  }
+
+  return model;
+}
+
+async function generateStory(artwork, artwork1, options={}) {
+  // //options example
+  //   options = {
+  //     storyType: "ghost",
+  //     modelName: "OpenAI GPT-4o"
+  //   }
+
+  if (process.env.CROSSTALK_USE_AI_SERVICE === 'true') {
+    let storyFramework;
+    if (options.storyType === undefined) {
+      storyFramework = _.sample(storyTypes);
+    } else {
+      storyFramework = _.find(storyTypes, {'name': options.storyType});
+    }
+
+    let modelMetadata;
+    if (options.modelName === undefined) {
+      modelMetadata = _.sample(models);
+    } else {
+      modelMetadata = _.find(models, {'name': options.modelName});
+    }
+
+    return await aiStory(modelMetadata, storyFramework, artwork, artwork1);
   } else {
     return manualStory(artwork);
   }
 }
 
-async function aiStory(storyFramework, artwork, artwork1) {
-    const model = new AzureChatOpenAI ({
-        modelName: "gpt-4o",
-        temperature: 0.5,
-        maxTokens: 4096,
-        maxRetries: 5,
-    });
-  
+async function aiStory(modelMetadata, storyFramework, artwork, artwork1) {
+    const model = getModel(modelMetadata);
+
     const prompt = ChatPromptTemplate.fromMessages([
         ["system", `You are two works of art. 
         
@@ -110,7 +177,7 @@ async function aiStory(storyFramework, artwork, artwork1) {
           These are two basic descriptions of the image of the second work of art: 
           
           ${artwork1.openai}
-          
+            
           ${artwork1.anthropic}`
         
         ],
@@ -122,7 +189,12 @@ async function aiStory(storyFramework, artwork, artwork1) {
         input: storyFramework.description
     }); 
     
-    let dialog = _.split(response.content, '\n\n');
+    let dialog = response.content.replace(/\n/g, '');
+    const regex = new RegExp('<turn[^>]*>', 'gi');
+    dialog = dialog.replace(regex, '');
+    dialog = _.split(dialog, '</turn>');
+    
+    let rawText = response.content;
 
     return dialog;
 }
@@ -154,5 +226,7 @@ function manualStory(artwork) {
 }
 
 module.exports = {
-    generateStory: generateStory
+    generateStory: generateStory,
+    storyTypes: storyTypes,
+    models: models
 };

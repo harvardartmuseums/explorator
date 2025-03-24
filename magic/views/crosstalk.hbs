@@ -16,6 +16,7 @@
         opacity: 1;
         transition: opacity 1s;
     }
+    [x-cloak] { display: none !important; }
 </style>
 
 <header class="jumbotron grey lighten-4">
@@ -23,7 +24,21 @@
     <p class="lead">What do you have to say for yourself?</p>
 </header>
 
-<main x-data="chat" class="overflow-hidden w-100 h-100">
+<main x-data="chat" class="overflow-hidden w-100 h-100" x-on:keydown.window="menu = ($event.key === 'm' ? !menu : menu)">
+<div id="controller" class="container-fluid" x-show="menu" x-cloak>
+    <label>Model</label>
+    <select id="model-name">
+        {{#each storyoptions.models}}
+            <option {{#eq name ../storysettings.model.name}}selected{{/eq}}>{{name}}</option>
+        {{/each}}        
+    </select>
+    <label>Story</label>
+    <select id="story-type">
+        {{#each storyoptions.types}}
+            <option {{#eq name ../storysettings.type.name}}selected{{/eq}}>{{name}}</option>
+        {{/each}}
+    </select>
+</div>
 <div class="container-fluid h-50 position-absolute top-50 start-50 translate-middle text-center">
     <div class="row h-100 justify-content-md-center">
         <div class="col-md-4 align-self-center">
@@ -34,9 +49,9 @@
         </div>
         <div class="col-md-4 d-flex align-items-center justify-content-center h-100">
             <button x-show="state === 'new'" x-on:click="startChat" class="btn btn-lg">Let's Dialog</button>
-            <div x-show="state === 'loading'" class="h2 text-start" id="loader"></div>
-            <div x-show="state === 'chatting'" class="h2 text-start" id="dialog"></div>
-            <div x-show="state === 'complete'" class="text-start h-100" style="overflow-y: scroll;" id="chat"></div>             
+            <div x-cloak x-show="state === 'loading'" class="h2 text-start" id="loader"></div>
+            <div x-cloak x-show="state === 'chatting'" class="h2 text-start" id="dialog"></div>
+            <div x-cloak x-show="state === 'complete'" class="text-start h-100" style="overflow-y: scroll;" id="chat"></div>             
         </div>
         <div class="col-md-4 align-self-center">
             <figure>
@@ -53,6 +68,7 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('chat', () => ({
+            menu: false,
             state: 'new',
             chatter: -1,
             colors: [
@@ -90,11 +106,18 @@
                     .type("Cogitating...").pause(1000).delete()
                     .go();
                 
-                fetch('crosstalk/generate/{{objects.0.objectid}}-{{objects.1.objectid}}')
+
+                let urlParameters = new URLSearchParams({
+                    storyType: document.getElementById("story-type").value,
+                    modelName: document.getElementById("model-name").value
+                });
+                let baseURL = 'crosstalk/generate/{{objects.0.objectid}}-{{objects.1.objectid}}';
+                fetch(`${baseURL}?${urlParameters.toString()}`)
                     .then(res => res.json())
                     .then(res => {
                         this.dialog = res.dialog;
-
+        
+                        this.menu = false;
                         document.getElementsByTagName("header")[0].classList.add("hide");
 
                         loader.reset();
@@ -134,6 +157,13 @@
                         object1.classList.remove("fade-50");
 
                         document.getElementById("chat").innerHTML = this.dialog.join("<br/><br/>");
+                        
+                        storytype = document.getElementById("story-type").value;
+                        modelname = document.getElementById("model-name").value;
+
+                        document.getElementById("chat").innerHTML += `
+                            <br/><br/>A ${storytype} story as told by ${modelname} on ${new Date().toString()}.
+                        `;
                     }
                 });
 
