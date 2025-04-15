@@ -2,10 +2,28 @@ var router = require("express-promise-router")();
 const ham  = require('@harvardartmuseums/ham');
 const nlp = require('compromise');
 const apicache = require('apicache');
+const _ = require('lodash');
 
 let cache = apicache.middleware;
 
 let HAM = new ham(process.env.apikey);
+let HAM_OWNER = new ham(process.env.apikey_owner);
+
+async function getArticles(exhibitionID) {
+  let url = `https://harvardartmuseums.org/exhibitions/${exhibitionID}/articles/json`;
+  let response = await fetch(url);
+  let articles = response.json();
+
+  return articles;
+}
+
+async function getEvents(exhibitionID) {
+  let url = `https://harvardartmuseums.org/calendar/json?exhibition_id=${exhibitionID}`;
+  let response = await fetch(url);
+  let events = response.json();
+
+  return events;
+}
 
 /* GET the main image page. */
 router.get('/', function(req, res, next) {
@@ -48,9 +66,6 @@ router.get('/data/timeline', async function(req, res, next) {
         headline: d.title,
         text: `<a href="/exhibitions/${d.id}">Learn more about this exhibition</a>`
       };
-      // if (d.description) {
-      //   e.text.text =  d.description;
-      // }
       e.start_date = {
         year: startDate.getFullYear(),
         month: startDate.getMonth()+1,
@@ -91,12 +106,12 @@ router.get('/know-your-exhibition', cache('20 hours'), async function(req, res, 
     size:100,
     sort: "chronological"
   }
-  let data = await HAM.Exhibitions.search(params)
+  let data = await HAM_OWNER.Exhibitions.search(params)
   let exhibitions = data.records;
 
   // process date below
   for (let i = 0; i < exhibitions.length; i++){
-    let image = await HAM.Images.get(exhibitions[i].images[0].imageid);
+    let image = await HAM_OWNER.Images.get(exhibitions[i].images[0].imageid);
     if (image.colors) {
 
       let steps = [];
@@ -155,8 +170,106 @@ router.get('/:id', async function(req, res, next) {
 
   objects = await HAM.Objects.search({exhibition: exhibition.id, hasimage: 1, sort: 'random', q: 'imagepermissionlevel:0'});
   exhibition.objects = objects.records;
+
+  articles = await getArticles(exhibition.id);
+  exhibition.articles = articles;
+
+  events = await getEvents(exhibition.id);
+  exhibition.eventcount = events.length;
+  events = _.groupBy(events, "event_type");
+  
+  exhibition.events = events;
   
   res.render('details', {layout: '../../core/views/layout.hbs', title: 'Exhibition Explorer | Explorator | Harvard Art Museums', exhibition: exhibition });
+});
+
+
+router.get('/:id/timeline', async function (req, res, next) {
+  let exhibition = await HAM.Exhibitions.get(req.params.id);
+
+  articles = await getArticles(exhibition.id);
+  events = await getEvents(exhibition.id);
+    
+  let timeline_events = [];
+
+  exhibition.venues.forEach(d => {
+    var startDate = new Date(d.begindate);
+    var endDate = new Date(d.enddate);
+    var e = {
+      unique_id: `${exhibition.id}-v-${d.venueid}`
+    };
+    e.text = {
+      headline: `On view at ${d.fullname}`,
+      text: `A venue`
+    };
+    // if (d.description) {
+    //   e.text.text =  d.description;
+    // }
+    e.start_date = {
+      year: startDate.getFullYear(),
+      month: startDate.getMonth()+1,
+      day: startDate.getDate()+1
+    };
+    e.end_date = {
+      year: endDate.getFullYear(),
+      month: endDate.getMonth()+1,
+      day: endDate.getDate()+1             
+    };
+    timeline_events.push(e);            
+  });
+
+  events.forEach(d => {
+    var startDate = new Date(d.date);
+    var e = {
+      unique_id: `${exhibition.id}-e-${d.id}`
+    };
+    e.text = {
+      headline: d.title,
+    };
+    if (d.summary) {
+      e.text.text =  d.summary;
+    }
+    e.text.text += `<p><a href="https://harvardartmuseums.org/calendar/${d.slug}">View the event details</a></p>`;
+    e.start_date = {
+      year: startDate.getFullYear(),
+      month: startDate.getMonth()+1,
+      day: startDate.getDate()+1
+    };
+    // e.end_date = {
+    //   year: endDate.getFullYear(),
+    //   month: endDate.getMonth()+1,
+    //   day: endDate.getDate()+1             
+    // };
+    timeline_events.push(e);            
+  });
+
+
+  articles.forEach(d => {
+    var startDate = new Date(d.article.date);
+    var e = {
+      unique_id: `${exhibition.id}-a-${d.article_id}`
+    };
+    e.text = {
+      headline: d.article.title,
+    };
+    if (d.article.summary) {
+      e.text.text =  d.article.summary;
+    }
+    e.text.text += `<p><a href="https://harvardartmuseums.org/article/${d.article.slug}">Read the article</a></p>`
+    e.start_date = {
+      year: startDate.getFullYear(),
+      month: startDate.getMonth()+1,
+      day: startDate.getDate()+1
+    };
+    e.media = {
+      url: d.article.image_file,
+      caption: '',
+      credit: ''
+    };
+    timeline_events.push(e);            
+  });
+
+  res.json(timeline_events);
 });
 
 module.exports = router;

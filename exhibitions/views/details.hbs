@@ -1,3 +1,6 @@
+<link title="timeline-styles" rel="stylesheet" href="//cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
+<script src="//cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+
 <header class="jumbotron grey lighten-4">
     <h1>Exhibition Explorer</h1>
     <p class="lead"></p>
@@ -41,9 +44,20 @@
 
     <h3>Videos</h3>
     <div class="pb-4">
+        <p>{{length exhibition.videos}} videos are associated with the exhibition.</p>
+
     {{#exhibition.videos}}
         <p><a href="{{primaryurl}}">{{description}}</a></p>
     {{/exhibition.videos}}
+    </div>
+
+    <h3>Audio</h3>
+    <div class="pb-4">
+        <p>{{length exhibition.audio}} audio tracks are associated with the exhibition.</p>
+
+    {{#exhibition.audio}}
+        <p><a href="{{primaryurl}}">{{description}}</a></p>
+    {{/exhibition.audio}}
     </div>
 
     <h3>Objects</h3>
@@ -57,4 +71,58 @@
             {{/exhibition.objects}}
         {{/if}}
     </div>
+
+    <h3>Articles</h3>
+    <div class="pb-4">
+        <p>{{length exhibition.articles}} articles are associated with the exhibition.</p>
+
+        {{#exhibition.articles}}
+            <p>{{article.date}}: <a href="https://harvardartmuseums.org/article/{{article.slug}}">{{article.title}}</a></p>
+        {{/exhibition.articles}}
+    </div>
+
+    <h3>Events</h3>
+    <div class="pb-4">
+        <p>{{exhibition.eventcount}} events are associated with the exhibition.</p>
+        {{#each exhibition.events}}
+            <h4>{{@key}} ({{length this}})</h4>
+            {{#each this}}
+            <p><a href="https://harvardartmuseums.org/calendar/{{slug}}">{{title}}</a>, {{date date "YYYY-MM-DD"}}</p>
+            {{/each}}
+        {{/each}}
+    </div>
+
+    <div id='timeline-embed' style="height: 620px;overflow:unset;"></div>
 </div>
+
+
+<script>
+    let timeline;
+    let years = {
+        start: '2013',
+        end: '2033'
+    }
+
+    start();
+
+    $("#year-range").on("change", function(e) {
+		$("#years").text($(this).val());
+
+        let year = Number($(this).val());
+        years.start = year - 10;
+        years.end = year + 10;
+
+        start(years);
+	});
+
+    async function start(years) {
+        let qs = new URLSearchParams(years);
+
+        let data = await fetch(`/exhibitions/{{exhibition.id}}/timeline?${qs.toString()}`);
+        let events = await data.json();
+        timeline = new TL.Timeline('timeline-embed',
+            {events: events},
+            {timenav_height_percentage: 50,hash_bookmark:true}
+        );  
+    }
+</script>
