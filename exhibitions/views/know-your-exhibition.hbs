@@ -1,0 +1,34 @@
+<header class="jumbotron grey lighten-4">
+    <h1>Know Your Exhibition</h1>
+    <p class="lead">Test your skills at identifying exhibitions</p>
+</header>
+
+<div class="container-fluid">
+<div class="row m-4">
+    <p>Click on a band of colors to reveal the exhibition</p>
+    <hr>
+    {{#each data}}
+        <div class="w-100" data-type="exhibition" data-id="{{this.id}}">
+            <span class="h2 p-2" style="color:transparent;display:inline-block;min-height:50px;background:{{poster.details.gradient}}">{{this.title}}</span>
+            <img class="d-none mb-3" src="{{poster.imageurl}}:IMAGE/square/50,50/0/default.jpg" alt="Poster image"> 
+            <div class="d-none">{{this.lead}} <a href="https://hvrd.art/e/{{this.id}}" target="_blank">Read more.</a></div>
+        </div>    
+    {{/each}}
+</div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        
+        function showExhibitionData() {
+            this.getElementsByTagName("img")[0].classList.remove('d-none');
+            this.getElementsByTagName("div")[0].classList.remove('d-none');
+            this.getElementsByTagName("span")[0].style.color = 'white';
+        }
+
+        let exhibitions = document.querySelectorAll("[data-type='exhibition']");
+        exhibitions.forEach(e => {
+            e.onclick = showExhibitionData;
+        })
+    });
+</script>

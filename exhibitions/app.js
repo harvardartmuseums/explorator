@@ -3,6 +3,10 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var hbs = require('hbs');
+var helpers = require('handlebars-helpers')({
+  handlebars: hbs
+});
 
 var routes = require('./routes');
 
