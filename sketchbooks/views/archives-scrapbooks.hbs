@@ -4,15 +4,42 @@
 </header>
 
 <div class="container">
-    <h2>Fogg Art Museum</h2>
-    {{#data.fogg.records}}
-        <a href="scrapbooks/{{id}}">{{objectnumber}}</a>, {{title}}, {{dated}} ({{datebegin}},{{dateend}})<br/>
-    {{/data.fogg.records}}
-    <br>
-    <h2> Busch-Reisinger Museum</h2>
-    {{#data.busch.records}}
-        {{objectnumber}}, {{title}}, {{dated}} ({{datebegin}},{{dateend}})<br/>
-    {{/data.busch.records}}
+    <section class="mb-4 pb-4">
+        <div>{{data.stats.books}} books, {{data.stats.images}} images</div>
+        <input type="text" id="search-terms" placeholder="Search the scrapbooks">
+        <button type="button" class="btn btn-primary" id="find-it">Find it!</button>
+        <button type="button" class="btn btn-tertiary" id="start-over">Start over</button>
+        <div>
+            <span id="search-results"></span>
+        </div>
+    </section>
+    <section class="mb-4 pb-4">
+        <h2>Fogg Art Museum</h2>
+        {{#data.fogg.records}}
+            <div class="mb-4">
+                {{dated}} ({{datebegin}},{{dateend}}) ({{length images}} images), {{title}}, <a href="scrapbooks/{{id}}">{{objectnumber}}</a><br>
+                <div style="display:flex;flex-direction: row;flex-wrap: wrap;">
+                    {{#images}}
+                        <a href="scrapbooks/{{../id}}/page/{{imageid}}"><div style="margin:1px;width:4px;height:6px;background:grey;" data-id="{{imageid}}"></div></a>
+                    {{/images}}
+                </div>
+            </div>
+        {{/data.fogg.records}}
+    </section>
+
+    <section>
+        <h2> Busch-Reisinger Museum</h2>
+        {{#data.busch.records}}
+            <div class="mb-4">
+                {{dated}} ({{datebegin}},{{dateend}}) ({{length images}} images), {{title}}, <a href="scrapbooks/{{id}}">{{objectnumber}}</a><br>
+                <div style="display:flex;flex-direction: row;flex-wrap: wrap;">
+                    {{#images}}
+                        <a href="scrapbooks/{{../id}}/page/{{imageid}}"><div style="margin:1px;width:4px;height:6px;background:grey;" data-id="{{imageid}}"></div></a>
+                    {{/images}}
+                </div>
+            </div>   
+        {{/data.busch.records}}
+    </section>
 </div>
 
 <footer class="page-footer grey darken-1 font-small p-3 mt-4">
@@ -20,3 +47,87 @@
 			Another R&amp;D project from the department of Digital Infrastructure and Emerging Technology at Harvard Art Museums
 	</div>	
 </footer>
+
+<script>
+    let stats = {
+        books: {{data.stats.books}},
+        images: {{data.stats.images}}
+    };
+
+    let search = {
+        terms: '',
+        count: 0
+    };
+
+	document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("find-it").onclick = () => {
+            let terms =  document.getElementById("search-terms").value;
+            if (terms.length > 3) {
+                findTerms(terms);
+            }
+        }
+
+        document.getElementById("start-over").onclick = () => {
+            resetSearch();
+
+            turnOnImages();
+            document.getElementById("search-terms").value = "";
+        }
+    });
+
+    async function findTerms(terms) {
+        let params = new URLSearchParams({
+            term: terms
+        });
+
+        search.terms = terms;
+        search.count = 0;
+        
+        let url = `/books/archives/scrapbooks/search?${params.toString()}`;				
+        let data = await fetch(url).then(r => r.json());
+
+        turnOffImages();
+        turnOnSelectionOfImages(data);
+
+        updateSearchResults();
+    }
+
+    function resetSearch() {
+        search.terms = '';
+        search.count = 0;
+        document.getElementById("search-results").innerText = "";
+    }
+
+    function updateSearchResults() {
+        document.getElementById("search-results").innerText = `${search.count} occurences found`;
+    }
+
+    function turnOffImages() {
+        let images = document.querySelectorAll("[data-id]");
+        images.forEach(i => {
+            i.style.opacity = 0.2;
+            i.style.background = 'grey';
+
+        })
+    }
+
+    function turnOnImages() {
+        let images = document.querySelectorAll("[data-id]");
+        images.forEach(i => {
+            i.style.opacity = 1.0;
+            i.style.background = 'grey';
+
+        })
+    }
+
+    function turnOnSelectionOfImages(idlist) {
+        idlist.forEach(id => {
+            let image = document.querySelectorAll(`[data-id='${id}']`);
+            if (image.length > 0) {
+                search.count +=1;
+                image[0].style.opacity = 1.0;
+                image[0].style.background = 'red';
+            }
+        });
+    }
+</script>

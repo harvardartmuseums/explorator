@@ -12,10 +12,12 @@
                 <div>{{data.image.caption}}</div>
             </div>
             <div class="col">
-                {{#data.annotations.records}}
-                    {{body}}<br/>   
-                {{/data.annotations.records}}
-
+                {{#data.descriptions.records}}
+                    <div>
+                        <strong>{{source}}, {{model}}</strong>
+                        <p>{{{markdown body}}}<p/>   
+                    </div>
+                {{/data.descriptions.records}}
             </div>
         </div>
     </div>

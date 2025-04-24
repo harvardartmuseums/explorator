@@ -5,6 +5,7 @@
 
 <div class="container">
     <h2>{{data.title}}, {{data.dated}}</h2>
+    <div class="mb-4">{{data.objectnumber}}</div>
     {{#data.images}}
         <a href="{{../data.objectid}}/page/{{imageid}}"><img src="{{baseimageurl}}:IMAGE/full/!200,200/0/default.jpg"></a>
     {{/data.images}}
