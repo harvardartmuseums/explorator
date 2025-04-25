@@ -128,4 +128,61 @@ router.get('/archives/scrapbooks/:id/page/:imageid', async function(req, res, ne
   res.render('archives-scrapbooks-details-page', {layout: '../../core/views/layout.hbs', title: 'Archives Scrapbooks | Book Explorer | Explorator | Harvard Art Museums', data: data });
 });
 
+
+router.get('/archives/scrapbooks/:id/page/:imageid/search', async function(req, res, next) {
+  let data = {
+    imageid: req.params.imageid,
+    annotations: [], 
+    anno_format: []
+  };
+
+  let term = req.query.term;
+  if (term.length > 3) {
+    let params = {
+      image: req.params.imageid,
+      size: 500,
+      fields: 'source,body,selectors,raw.iiifTextImageURL',
+      q: `type:text AND body:${term}`
+    };
+
+    data.annotations = await HAM_OWNER.Annotations.search(params);
+
+    // format for annotorius: https://annotorious.dev/api-reference/image-annotation/
+    let anno_format = [];
+    data.annotations.records.forEach(r => {
+      if (r.body.toLowerCase() === term.toLowerCase()) {
+        let selector =  r.selectors[0].value;
+        let selector_parts = selector.split("=");
+        let geometry = selector_parts[1].split(",");
+
+        let a = {
+          id: r.id,
+          target: {
+            annotation: r.id,
+            selector: {
+                type: 'RECTANGLE',
+                geometry: {
+                  x: geometry[0],
+                  y: geometry[1],
+                  w: geometry[2],
+                  h: geometry[3],
+                  bounds: {
+                    minX: geometry[0], 
+                    minY: geometry[1], 
+                    maxX: geometry[2], 
+                    maxY: geometry[3]
+                  }
+                }
+            }
+          }
+        }
+        anno_format.push(a);
+      }
+    });
+    data.anno_format = anno_format;
+  }
+
+  res.json(data);
+});
+
 module.exports = router;

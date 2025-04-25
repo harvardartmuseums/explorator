@@ -5,6 +5,7 @@
 
 <div class="container">
     <h2>{{data.object.title}}, {{data.object.dated}}</h2>
+    <p>{{data.object.objectnumber}}, Rendition: {{data.image.renditionnumber}}</p>
     <div>
         <div class="row">
             <div class="col">
@@ -12,10 +13,18 @@
                 <div>{{data.image.caption}}</div>
             </div>
             <div class="col">
+                <input type="text" id="search-terms" placeholder="Search in the page">
+                <button type="button" class="btn btn-primary" id="find-it">Find it!</button>
+                <button type="button" class="btn btn-tertiary" id="start-over">Start over</button>
+                <div class="mb-4">
+                    <span id="search-results"></span>
+                </div>                
                 {{#data.descriptions.records}}
                     <div>
-                        <strong>{{source}}, {{model}}</strong>
-                        <p>{{{markdown body}}}<p/>   
+                        <details>
+                            <Summary>{{source}}, {{model}}</summary>
+                            <p>{{{markdown body}}}<p/>   
+                        </details>
                     </div>
                 {{/data.descriptions.records}}
             </div>
@@ -30,8 +39,15 @@
 	</div>	
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/openseadragon@5.0/build/openseadragon/openseadragon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/openseadragon@latest/build/openseadragon/openseadragon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@annotorious/openseadragon@latest/dist/annotorious-openseadragon.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@annotorious/openseadragon@latest/dist/annotorious-openseadragon.css">
 <script type="text/javascript">
+    let search = {
+        terms: '',
+        count: 0
+    };
+
     var viewer = OpenSeadragon({
         id: "openseadragon1",
         prefixUrl: "https://cdn.jsdelivr.net/npm/openseadragon@5.0/build/openseadragon/images/", 
@@ -39,4 +55,54 @@
             "{{data.image.iiifbaseuri}}/info.json"
         ]
     });
+
+    var anno = AnnotoriousOSD.createOSDAnnotator(viewer);
+    anno.setStyle({
+        fill: '#00ff00',
+        fillOpacity: 0.25,
+        stroke: '#00ff00',
+        strokeOpacity: 1
+    });
+
+	document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("find-it").onclick = () => {
+            let terms =  document.getElementById("search-terms").value;
+            if (terms.length > 3) {
+                findTerms(terms);
+            }
+        }
+
+        document.getElementById("start-over").onclick = () => {
+            resetSearch();
+            document.getElementById("search-terms").value = "";
+        }
+    });
+
+    function resetSearch() {
+        anno.clearAnnotations();
+        document.getElementById("search-results").innerText = "";
+    }
+
+    function updateSearchResults() {
+        document.getElementById("search-results").innerText = `${search.count} occurences found`;
+    }
+
+    async function findTerms(terms) {
+        let params = new URLSearchParams({
+            term: terms
+        });
+
+        search.terms = terms;
+        search.count = 0;
+        
+        let url = `${window.location}/search?${params.toString()}`;				
+        let data = await fetch(url).then(r => r.json());
+
+        data.anno_format.forEach(a => {
+            anno.addAnnotation(a);
+        })
+        search.count = data.anno_format.length;
+
+        updateSearchResults();
+    }    
 </script>     
