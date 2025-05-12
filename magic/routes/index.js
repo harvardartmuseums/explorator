@@ -21,6 +21,13 @@ router.get('/typewriter', function(req, res, next) {
     res.render('typewriter', {layout: '../../core/views/layout.hbs', title: 'Art Typewriter | Magic | Explorator | Harvard Art Museums'});
 });
 
+router.get('/prosody', function(req, res, next) {
+  res.render('prosody', {
+    layout: '../../core/views/layout.hbs', 
+    title: 'Poetics and Prosody | Explorator | Harvard Art Museums',
+  });
+});
+
 router.get('/crosstalk', async function(req, res, next) {
   let criteria = {
     gallery: 1220,

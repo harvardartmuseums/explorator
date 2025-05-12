@@ -1,0 +1,98 @@
+<header></header>
+
+<section class="container">
+   	<div x-data="recordlist">
+        <div class="m-5">&nbsp;</div>
+        <div class="m-5">&nbsp;</div>
+        <div class="m-5">&nbsp;</div>
+		<template x-for="record in records">
+            <div class="m-5"><h3 class="display-6" x-text="record.body" @mousemove="showPopUp($event,record)" @mouseout="hidePopUp()"></h3></div>
+        </template>
+        <div class="m-5">&nbsp;</div>
+        <div class="m-5">&nbsp;</div>
+        <div class="m-5">&nbsp;</div>
+        <div class="m-5">&nbsp;</div>
+
+		<div class="d-flex row justify-content-center mt-4 mb-4 fixed-top">
+	        <button class="btn btn-light btn-lg p-4 " type="button" @click="nextPage(1)">▼</button>
+	        <button class="btn btn-light btn-lg p-4 " type="button" @click="nextPage(2)">▼▼</button>
+	        <button class="btn btn-light btn-lg p-4 " type="button" @click="nextPage(3)">▼▼▼</button>
+		</div>	
+
+    </div>
+	<div id="popup" style="visibility: hidden;" class="p-1 bg-light position-absolute"><img src=""></div>
+</section>
+
+<script>
+	document.addEventListener('alpine:init', () => {
+		Alpine.data('recordlist', () => ({    
+            isLoading: false,
+            statusMessage: 'Rummaging...',
+			popup: document.getElementById("popup"),
+			visualizer: 0,
+			page: 1,    
+			records: [],
+			criteria: {
+				q: {
+					accesslevel: 1,
+					source: 'Clarifai',
+					type: 'description'
+				}
+            },  
+
+			async init() {
+				this.isLoading = true;
+				this.records = await this.getRecords();
+				this.isLoading = false;
+			},
+
+			async nextPage(count) {
+                for (i=1; i<=count; i++) {
+                    this.page+=1;
+                    this.records = this.records.concat(await this.getRecords());
+                    window.scrollTo(0, document.body.scrollHeight+100);
+                }
+			},
+
+			expandCriteria() {
+				return Object.entries(this.criteria.q).map(([k, v]) => `${k}:${v}`).join(' AND ');
+			},
+
+			reset() {
+				this.page = 1;
+				this.records = [];
+			},            
+
+			async getRecords() {
+                let urlParameters = new URLSearchParams({				
+					q: this.expandCriteria(),
+					fields: 'body,target',
+					page: this.page,
+					size: 1,
+				});
+				let url = `/data/annotations?${urlParameters.toString()}`; 
+
+				let results = await fetch(url).then(response => response.json());
+
+				for (let r of results.records) {
+                    r.imagesmall = r.target.replace('/full/full/', '/full/!200,200/');
+                    r.imagemedium = r.target.replace('/full/full/', '/full/!400,400/');
+				}
+
+				return results.records;
+			},
+
+			showPopUp(event,record) {
+				this.popup.style.top = `${event.pageY}px`;
+				this.popup.style.left = `${event.pageX+10}px`;
+				this.popup.innerHTML = `<img src="${record.imagemedium}">`;
+										 
+				this.popup.style.visibility = 'visible';
+			},
+
+			hidePopUp() {
+				this.popup.style.visibility = 'hidden';
+			}
+		}));
+	});
+</script>
