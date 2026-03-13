@@ -6,6 +6,9 @@
     "start": "node ./core/bin/www",
     "debug": "nodemon ./core/bin/www"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@harvardartmuseums/ham": "^1.0.3",
     "@langchain/aws": "^0.1.7",
