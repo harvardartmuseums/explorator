@@ -121,4 +121,28 @@
     {{/object.images}}
     </div>
 
+    <h3>Activity</h3>
+    <div class="pb-4">
+        <div id="activity-graph" class="graph pb-3"></div>
+        <div id="activity-day-data">
+            <div class="d-flex"><span class="w-50">Period of activity:</span><span class="metric-period"></span></div>
+            <div class="d-flex"><span class="w-50">Total page views:</span><span class="metric-pageviews">0</span></div>
+            <div class="d-flex"><span class="w-50">Unique page views:</span><span class="metric-uniquepageviews">0</span></div>
+            <div class="d-flex"><span class="w-50">Physical moves:</span><span class="metric-moves">0</span></div>
+            <div class="d-flex"><span class="w-50">Record edits:</span><span class="metric-edits">0</span></div>
+            <div class="d-flex"><span class="w-50">Study center views:</span><span class="metric-studycenterviews">0</span></div>
+            <div class="d-flex"><span class="w-50">Conservation:</span><span class="metric-conservation">0</span></div>
+        </div>
+    </div>
+
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="/javascripts/activity-graph.js"></script>
+<script>
+    let maxYear = new Date().getFullYear();
+
+	const graphContainer = document.getElementById('activity-graph');
+    const dataContainer  = document.getElementById('activity-day-data');
+	makeActivityGraph({{object.id}}, graphContainer, dataContainer, maxYear);
+</script>
