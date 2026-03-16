@@ -244,7 +244,7 @@ router.get('/ancient', async function(req, res, next) {
       if (r.primaryimageurl === undefined) {
         r.primaryimageurl = '/images/Image-Unavailable.jpg';
       } else {
-        r.primaryimageurl += ':IMAGE/square/!150,150/0/default.jpg';	
+        r.primaryimageurl += '/square/!150,150/0/default.jpg';	
       }
       processColors(r);
       r.primarycolor = r.colors ? r.colors[0].color : '#000000';
