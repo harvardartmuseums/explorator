@@ -21,23 +21,7 @@
 	<div class="container-responsive text-left">Calculated using data gathered from Google Analytics and Fathom. Built with the <a href="https://hvrd.art/api">Harvard Art Museums API</a>.</div>
 </footer>
 
-<style type="text/css">
-	.highlight-0 {background: #ffffff;}
-	.highlight-1 {background: #eeeeee;}
-	.highlight-2 {background: #dddddd;}
-	.highlight-3 {background: #cccccc;}
-	.highlight-4 {background: #bbbbbb;}
-	.highlight-5 {background: #aaaaaa;}
-	.highlight-6 {background: #999999;}
-	.highlight-7 {background: #888888;}
-	.highlight-8 {background: #777777;}
-	.highlight-9 {background: #666666;}
-	.highlight-10 {background: #555555;}
-	.highlight-11 {background: #444444;}
-	.highlight-12 {background: #333333;} 
-	.highlight-13 {background: #222222;} 
-	.highlight-14 {background: #111111;} 	
-</style>
+<style id="highlight-styles" type="text/css"></style>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="/javascripts/activity-graph.js"></script>
@@ -87,8 +71,27 @@
 	var objectTemplate;
 	var panel;
 	var body;
+	var minYear = 2009;
 	var maxYear = new Date().getFullYear();
 	var maxItems = 20;
+
+	// Dynamically generate highlight styles based on number of years in range
+	(function generateHighlightStyles() {
+		const count = maxYear - minYear + 1;
+		const styleEl = document.getElementById('highlight-styles');
+		let css = '';
+		for (let i = 0; i < count; i++) {
+			// Interpolate lightness from ~97% (light warm) down to ~5% (near black)
+			const t = i / Math.max(count - 1, 1);
+			// Warm-tinted: hue ~35, saturation ~8%, lightness decreasing
+			const lightness = Math.round(97 - t * 92);
+			const saturation = 8;
+			const hue = 35;
+			const textColor = lightness > 50 ? '#111' : '#fff';
+			css += `.highlight-${i} { background: hsl(${hue}, ${saturation}%, ${lightness}%); color: ${textColor}; }\n`;
+		}
+		styleEl.textContent = css;
+	})();
 
 	document.addEventListener("DOMContentLoaded", function() {
 		panel = $("#object-details-panel");
