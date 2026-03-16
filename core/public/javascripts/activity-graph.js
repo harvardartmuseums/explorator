@@ -7,10 +7,9 @@
  * @param {string}      objectId       - The museum object ID to fetch activity data for.
  * @param {HTMLElement} graphContainer - The DOM element to append the SVG chart into.
  * @param {HTMLElement} dataContainer  - The DOM element containing the metric display spans.
- * @param {number}      maxYear        - The upper-bound year for the date range (e.g. new Date().getFullYear()).
  * @returns {Promise<void>}
  */
-async function makeActivityGraph(objectId, graphContainer, dataContainer, maxYear) {
+async function makeActivityGraph(objectId, graphContainer, dataContainer) {
     // Inject axis styles once into the document if not already present
     const STYLE_ID = "activity-graph-styles";
     if (!document.getElementById(STYLE_ID)) {
@@ -50,56 +49,21 @@ async function makeActivityGraph(objectId, graphContainer, dataContainer, maxYea
         .x(d => x(d.activitydate))
         .y(d => y(d.totalcount));
 
-    const agg = {
-        activities: {
-            terms: {
-                field: "activitytype",
-                size: 10
-            },
-            aggs: {
-                by_month: {
-                    date_histogram: {
-                        field: "date",
-                        interval: "month",
-                        format: "yyy-MM",
-                        min_doc_count: 0,
-                        extended_bounds: {
-                            min: "2009-01",
-                            max: `${maxYear}-12`
-                        }
-                    },
-                    aggs: {
-                        totals: {
-                            sum: {
-                                field: "activitycount"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    const params = new URLSearchParams({
-        size: 0,
-        object: objectId,
-        aggregation: JSON.stringify(agg)
-    });
-    const url = `/data/activities?${params.toString()}`;
-
-    const graphWidth  = width  + margin.left + margin.right;
-    const graphHeight = height + margin.top  + margin.bottom;
-
-    const svg = d3.select(graphContainer)
+        
+        const graphWidth  = width  + margin.left + margin.right;
+        const graphHeight = height + margin.top  + margin.bottom;
+        
+        const svg = d3.select(graphContainer)
         .append("svg")
-            .attr("width",  graphWidth)
-            .attr("height", graphHeight)
+        .attr("width",  graphWidth)
+        .attr("height", graphHeight)
         .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+        
     try {
+        const url = `/data/object/${objectId}/activities/by/month`;
         let data = await d3.json(url);
-        data = data.aggregations.activities;
+        data = data.activities;
 
         color.domain(Object.keys(data.buckets));
 

@@ -32,4 +32,46 @@ router.get('/:endpoint/:id', cache('12 hours'), async function(req, res, next) {
     res.json(results);
 });
 
+router.get('/object/:id/activities/by/month', async function(req, res, next) {
+	let maxYear = new Date().getFullYear();
+
+    const aggregations = {
+        activities: {
+            terms: {
+                field: "activitytype",
+                size: 10
+            },
+            aggs: {
+                by_month: {
+                    date_histogram: {
+                        field: "date",
+                        interval: "month",
+                        format: "yyy-MM",
+                        min_doc_count: 0,
+                        extended_bounds: {
+                            min: "2009-01",
+                            max: `${maxYear}-12`
+                        }
+                    },
+                    aggs: {
+                        totals: {
+                            sum: {
+                                field: "activitycount"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    const params = {
+        size: 0,
+        object: parseInt(req.params.id)
+    };
+
+    let results = await HAM.Activities.search(params, aggregations);
+    res.json(results.aggregations);
+});
+
 module.exports = router;

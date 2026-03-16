@@ -140,9 +140,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="/javascripts/activity-graph.js"></script>
 <script>
-    let maxYear = new Date().getFullYear();
-
 	const graphContainer = document.getElementById('activity-graph');
     const dataContainer  = document.getElementById('activity-day-data');
-	makeActivityGraph({{object.id}}, graphContainer, dataContainer, maxYear);
+	makeActivityGraph({{object.id}}, graphContainer, dataContainer);
 </script>
