@@ -1,0 +1,124 @@
+<header class="jumbotron grey lighten-4">
+    <h1>Object Explorer</h1>
+    <p class="lead"></p>
+</header>
+
+<div class="container-fluid p-4">
+     <h2><u>{{object.title}}</u></h2>
+
+    <dl class="row pb-3">
+        {{#if object.objectnumber}}
+        <dt class="col-sm-3">Object Number</dt>
+        <dd class="col-sm-9">{{object.objectnumber}}</dd>
+        {{/if}}
+        {{#if object.classification}}
+        <dt class="col-sm-3">Classification</dt>
+        <dd class="col-sm-9">{{object.classification}}</dd>
+        {{/if}}
+        {{#if object.worktypes}}
+        <dt class="col-sm-3">Work Types</dt>
+        <dd class="col-sm-9">{{#object.worktypes}}{{worktype}}{{#unless @last}}, {{/unless}}{{/object.worktypes}}</dd>
+        {{/if}}
+        {{#if object.dated}}
+        <dt class="col-sm-3">Date</dt>
+        <dd class="col-sm-9">{{object.dated}}</dd>
+        {{/if}}
+        {{#if object.period}}
+        <dt class="col-sm-3">Period</dt>
+        <dd class="col-sm-9">{{object.period}}</dd>
+        {{/if}}
+        {{#if object.century}}
+        <dt class="col-sm-3">Century</dt>
+        <dd class="col-sm-9">{{object.century}}</dd>
+        {{/if}}
+        {{#if object.culture}}
+        <dt class="col-sm-3">Culture</dt>
+        <dd class="col-sm-9">{{object.culture}}</dd>
+        {{/if}}
+        {{#if object.medium}}
+        <dt class="col-sm-3">Medium</dt>
+        <dd class="col-sm-9">{{object.medium}}</dd>
+        {{/if}}
+        {{#if object.technique}}
+        <dt class="col-sm-3">Technique</dt>
+        <dd class="col-sm-9">{{object.technique}}</dd>
+        {{/if}}
+        {{#if object.terms.support}}
+        <dt class="col-sm-3">Supports</dt>
+        <dd class="col-sm-9">{{#object.terms.support}}{{name}}{{#unless @last}}, {{/unless}}{{/object.terms.support}}</dd>
+        {{/if}}
+        {{#if object.dimensions}}
+        <dt class="col-sm-3">Dimensions</dt>
+        <dd class="col-sm-9">{{object.dimensions}}</dd>
+        {{/if}}
+        {{#if object.creditline}}
+        <dt class="col-sm-3">Credit Line</dt>
+        <dd class="col-sm-9">{{object.creditline}}</dd>
+        {{/if}}
+        {{#if object.accessionyear}}
+        <dt class="col-sm-3">Accession Year</dt>
+        <dd class="col-sm-9">{{object.accessionyear}}</dd>
+        {{/if}}
+    </dl>
+
+    {{#if object.people}}
+    <div class="pb-3">
+    {{#object.people}}
+        <p>{{role}}: <a href="/people/{{personid}}" target="_blank">{{displayname}}</a></p>
+    {{/object.people}}
+    </div>
+    {{/if}}
+    
+    {{#if object.provenance}}
+    <h3>Provenance</h3>
+    <div class="pb-3">{{{object.provenance}}}</div>
+    {{/if}}
+
+    {{#if object.description}}
+    <h3>Description</h3>
+    <div class="pb-3">{{{object.description}}}</div>
+    {{/if}}
+
+    {{#if object.commentary}}
+    <h3>Commentary</h3>
+    <div class="pb-3">{{{object.commentary}}}</div>
+    {{/if}}
+
+    {{#if object.labeltext}}
+    <h3>Label Text</h3>
+    <div class="pb-3">{{{object.labeltext}}}</div>
+    {{/if}}
+    
+    <hr>
+
+    {{#if object.gradient}}
+    <h3>Colors</h3>
+    <div class="pb-4">
+        <div style="background: {{{object.gradient}}}; height: 40px; border-radius: 4px;" title="Color gradient"></div>
+        <div class="d-flex flex-wrap pt-2">
+        {{#object.colors}}
+            <div class="me-2 mb-2 text-center" style="width: 48px;">
+                <div style="background-color: {{color}}; width: 48px; height: 48px; border-radius: 4px; border: 1px solid #ccc;"></div>
+                <small>{{color}}</small>
+            </div>
+        {{/object.colors}}
+        </div>
+    </div>
+    {{/if}}
+
+    <hr>
+
+    <h3>Images</h3>
+    <div class="pb-4">
+    {{#object.images}}
+        <div class="media pe-4">
+            <img src="{{iiifbaseuri}}/full/!200,200/0/default.jpg">
+            <div class="media-body p-4">
+                <p>{{alttext}}</p>
+                {{description}}
+            </div>
+        </div>
+    {{/object.images}}
+    </div>
+
+</div>

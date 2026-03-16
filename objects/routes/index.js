@@ -5,9 +5,46 @@ const _ = require('lodash');
 
 let HAM = new ham(process.env.apikey);
 
+/**
+ * Processes color data on a record, adding scaled/rounded percents,
+ * RGB components, and a CSS linear-gradient string as `record.gradient`.
+ * Mutates the record in-place. Does nothing if `record.colors` is absent.
+ */
+function processColors(record) {
+  if (!record.colors) return;
+
+  let max = 0;
+  record.colors.forEach(c => {
+    c.percentScaled = Math.floor(c.percent * 1000000);
+    max += c.percentScaled;
+  });
+
+  record.colors.forEach(c => {
+    c.percentRounded = Math.floor(Math.abs((((c.percentScaled - 0) * (100 - 1)) / (max - 0)) + 1));
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(c.color);
+    c.r = parseInt(result[1], 16);
+    c.g = parseInt(result[2], 16);
+    c.b = parseInt(result[3], 16);
+  });
+
+  let steps = [];
+  let stop = 0;
+  record.colors.forEach((c, i) => {
+    if (i > 0) stop += Math.round(record.colors[i - 1].percentRounded);
+    if (stop >= 90) stop = stop - (stop - 100 + (record.colors.length - i)) + 1;
+    steps.push(`rgba(${c.r},${c.g},${c.b},1) ${stop}%`);
+  });
+  record.gradient = `linear-gradient(90deg, ${steps.toString()})`;
+}
+
 /* GET the main image page. */
 router.get('/', function(req, res, next) {
   res.render('index', {layout: '../../core/views/layout.hbs', title: 'Objects Explorer | Explorator | Harvard Art Museums' });
+});
+
+/* GET the object browse page. */
+router.get('/browse', function(req, res, next) {
+    res.render('object-browse', {layout: '../../core/views/layout.hbs', title: 'Browse | Object Explorer | Explorator | Harvard Art Museums'});
 });
 
 router.get('/stats', async function(req, res, next) {
@@ -118,24 +155,7 @@ router.get('/visualize/:yearfrom-:yearto', async function(req, res, next) {
         r.age = now.getFullYear() - ((r.datebegin + r.dateend)/2);
       }
   
-      // split hex colors to rgb
-      if (r.colors) {
-        let max = 0;
-        r.colors.forEach(c => {
-          c.percentScaled = Math.floor(c.percent*1000000);
-          max += c.percentScaled;
-        });
-  
-        r.colors.forEach(c => {
-          c.percentRounded = Math.floor(Math.abs((((c.percentScaled - 0) * (100 - 1)) / (max - 0)) + 1));
-          // colors.map(c => (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin; )
-  
-          let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(c.color);
-          c.r = parseInt(result[1], 16);
-          c.g = parseInt(result[2], 16);
-          c.b = parseInt(result[3], 16)
-        });
-      }
+      processColors(r);
   };
 
   // objects = _.orderBy(objects, "accessionyear", "desc");
@@ -226,14 +246,20 @@ router.get('/ancient', async function(req, res, next) {
       } else {
         r.primaryimageurl += ':IMAGE/square/!150,150/0/default.jpg';	
       }
-      if (r.colors === undefined) {
-        r.primarycolor = '#000000';
-      } else {
-        r.primarycolor = r.colors[0].color;
-      }
+      processColors(r);
+      r.primarycolor = r.colors ? r.colors[0].color : '#000000';
     }
 
     res.render('ancient', {layout: '../../core/views/layout.hbs',  title: 'Objects Explorer | Explorator | Harvard Art Museums', objects: objects});
 })
+
+router.get('/:id', async function(req, res, next) {
+  let object = await HAM.Objects.get(req.params.id);
+
+  processColors(object);
+  
+  res.render('object-details', {layout: '../../core/views/layout.hbs', title: 'Object Explorer | Explorator | Harvard Art Museums', object: object });
+});
+
 
 module.exports = router;

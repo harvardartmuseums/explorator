@@ -1,0 +1,146 @@
+<header class="jumbotron grey lighten-4">
+	<h1>Object Explorer</h1>
+	<p class="lead">Search for objects in the Harvard Art Museums collections</p>
+</header>
+
+<div class="container-fluid p-4">
+	<div class="pb-2">
+		<input type="text" id="objectname" value=""></input>
+        <label>on view only</label> <input type="checkbox" id="filter-on-view" value=""></input>
+		<button type="button" class="btn btn-primary" id="search-objects-button">Filter</button>
+		<button type="button" class="btn btn-light" id="reset-search-criteria">Clear</button>
+		<span id="info" class="body"></span>
+	</div>
+	<div id="paginator"></div>
+		
+	<div id="loader">
+		Fetching some objects just for you <img src="/images/ajax-loader.gif" height="25">
+	</div>
+	<div id="objects" class="container-fluid p-0"></div>
+</div>
+
+<footer class="page-footer grey darken-1 font-small p-3">
+	<div class="info-panel">
+		<span id="counter">Enter an object title and click the "Filter" button</span>
+	</div>
+</footer>
+
+<script id="object-template" type="text/template">
+	<ul class="list-unstyled">
+	\{{#records}}	
+		<li>
+		<div data-object-id="\{{id}}">
+			<p>
+				<h5><a href="\{{id}}">\{{title}}</a></h5>
+
+				<div class="pb-4">
+                    \{{#if primaryimageurl}}
+                        <a href="\{{id}}"><img src="\{{primaryimageurl}}/full/!150,150/0/default.jpg"></a>  
+                    \{{/if}}
+
+					\{{#if culture}}
+						Culture: \{{culture}}</br>
+					\{{/if}}
+
+					\{{#if dated}}
+						Dates: \{{dated}}</br>
+					\{{/if}}
+				</div>
+			</p>
+			{{!-- <p>\{{objectcount}} objects are associated with \{{displayname}}. </p> --}}
+			<hr>
+		</div>
+		</li>
+	\{{/records}}
+	</ul>
+</script>	
+<script id="info-template" type="text/template">
+	\{{totalrecords}} objects 
+</script>
+<script id="related-objects-template" type="text/template">
+	<div>
+		\{{#records}}
+			<div style="position:relative;float:left;height:100px;margin:2px;">
+				<a href="\{{url}}" target="_blank"><img src="\{{primaryimageurl}}?height=100"></a>
+			</div>
+		\{{/records}}
+	</div>
+	<div style="clear:both;"></div>
+</script>
+
+<script>
+    let onviewFilter = '';
+
+	document.addEventListener("DOMContentLoaded", function() {
+		$("#objectname").val(window.location.hash);
+
+        $("#filter-on-view").on("click", function(e) {
+            if (e.target.checked) {
+                onviewFilter = 'any';
+            } else {
+                onviewFilter = '';
+            }
+            fillObjects();
+        });
+
+		$("#search-objects-button").on("click", function() {
+			window.location.hash = $("#objectname").val();
+			fillObjects();
+		});
+
+		$("#reset-search-criteria").on("click", function() {
+			window.location.hash = '';
+			$("#objectname").val('');
+			fillObjects();
+		});
+
+		fillObjects();
+	});
+
+
+	function fillObjects() {
+		var keyword = $("#objectname").val() || '';
+		var urlBase = '/data/objects';
+		var urlParameters = {
+			keyword: keyword,
+            q: "accesslevel:1",
+			sort: "objectid",
+			gallery: onviewFilter
+		};
+		var url = urlBase + "?" + $.param(urlParameters);
+
+		let objectsSource = $('#object-template').html();
+		let objectsTemplate = Handlebars.compile(objectsSource);
+		
+		let infoSource = $('#info-template').html();
+		let infoTemplate = Handlebars.compile(infoSource);
+		
+		$("#paginator").pagination({
+			dataSource: url,
+			locator: "records",
+			pageSize: 20,
+			alias: {
+				pageNumber: "page",
+				pageSize: "size"
+			},
+			totalNumberLocator: function(response) {
+				return response.info.totalrecords;
+			},
+			beforePaging: function() {
+				$('#objects').html('');
+				$("#loader").show();
+			},
+			callback: function(data, pagination) {
+				let info;
+				
+				info = infoTemplate({totalrecords: pagination.totalNumber});
+				$('#info').html(info);
+
+				info = objectsTemplate({records: data});
+				$('#objects').html(info);
+				
+				$("#loader").hide();
+			}
+		})
+	}			
+</script>
