@@ -135,12 +135,39 @@
         </div>
     </div>
 
+    <hr>
+
+    <div id="object-timeline-section" class="pb-4">
+        <h3>Timeline</h3>
+        <div id="object-timeline-embed" style="height: 600px; overflow: unset;"></div>
+    </div>
+
 </div>
 
+<link title="timeline-styles" rel="stylesheet" href="//cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
+<script src="//cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="/javascripts/activity-graph.js"></script>
 <script>
 	const graphContainer = document.getElementById('activity-graph');
     const dataContainer  = document.getElementById('activity-day-data');
 	makeActivityGraph({{object.id}}, graphContainer, dataContainer);
+</script>
+
+<script>
+(async function () {
+    try {
+        const response = await fetch('/objects/{{object.id}}/timeline');
+        const events = await response.json();
+
+        if (events.length > 0) {
+            new TL.Timeline('object-timeline-embed', { events: events }, { timenav_height_percentage: 40, hash_bookmark: false });
+        } else {
+            document.getElementById('object-timeline-section').style.display = 'none';
+        }
+    } catch (err) {
+        console.error('Failed to load object timeline:', err);
+        document.getElementById('object-timeline-section').style.display = 'none';
+    }
+})();
 </script>

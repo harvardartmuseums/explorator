@@ -261,5 +261,111 @@ router.get('/:id', async function(req, res, next) {
   res.render('object-details', {layout: '../../core/views/layout.hbs', title: 'Object Explorer | Explorator | Harvard Art Museums', object: object });
 });
 
+router.get('/:id/timeline', async function(req, res, next) {
+  let object = await HAM.Objects.get(req.params.id);
+
+  let timeline_events = [];
+
+  // Creation event
+  if (object.datebegin) {
+    let startYear = object.datebegin;
+    let endYear   = object.dateend || object.datebegin;
+    let e = {
+      unique_id: `${object.id}-creation`
+    };
+    e.text = {
+      headline: 'Created',
+      text: object.dated || ''
+    };
+    e.start_date = { year: startYear };
+    e.end_date   = { year: endYear };
+    e.group = 'Creation';
+    timeline_events.push(e);
+  }
+
+  // Acquisition event
+  if (object.accessionyear) {
+    let e = {
+      unique_id: `${object.id}-acquisition`
+    };
+    e.text = {
+      headline: 'Acquired by Harvard Art Museums',
+      text: object.creditline || ''
+    };
+    e.start_date = { year: object.accessionyear };
+    e.group = 'Acquisition';
+    timeline_events.push(e);
+  }
+
+  // Exhibition events
+  if (object.exhibitions && object.exhibitions.length > 0) {
+    object.exhibitions.forEach(d => {
+      if (!d.begindate && !d.enddate) return;
+
+      let rawStart = d.begindate || d.enddate;
+      let startDate = new Date(rawStart);
+      let e = {
+        unique_id: `${object.id}-ex-${d.id}`
+      };
+      e.text = {
+        headline: d.title,
+        text: ''
+      };
+      if (d.venues && d.venues.length > 0) {
+        e.text.text = d.venues
+          .map(v => `<div>${v.name}${v.city ? ', ' + v.city : ''}</div>`)
+          .join('');
+      }
+      e.start_date = {
+        year:  startDate.getFullYear(),
+        month: startDate.getMonth() + 1,
+        day:   startDate.getDate()
+      };
+      if (d.enddate) {
+        let endDate = new Date(d.enddate);
+        e.end_date = {
+          year:  endDate.getFullYear(),
+          month: endDate.getMonth() + 1,
+          day:   endDate.getDate()
+        };
+      }
+      e.group = 'Exhibition';
+      timeline_events.push(e);
+    });
+  }
+
+  // Publication events
+  if (object.publications && object.publications.length > 0) {
+    object.publications.forEach((d, i) => {
+      const year = parseInt(d.publicationyear, 10);
+      if (!d.publicationyear || isNaN(year) || year <= 0) return;
+
+      let e = {
+        unique_id: `${object.id}-pub-${d.publicationid || i}`
+      };
+      const textParts = [];
+      if (d.citation)          textParts.push(d.citation);
+      if (d.format)            textParts.push(`<em>${d.format}</em>`);
+      if (d.volumetitle || d.volumenumber) {
+        const volParts = [d.volumetitle, d.volumenumber].filter(Boolean);
+        textParts.push(volParts.join(', '));
+      }
+      if (d.publicationdate)   textParts.push(`Date: ${d.publicationdate}`);
+      if (d.publicationplace)  textParts.push(`Published: ${d.publicationplace}`);
+      if (d.pagenumbers)       textParts.push(`Pages: ${d.pagenumbers}`);
+      if (d.citationremarks)   textParts.push(d.citationremarks);
+
+      e.text = {
+        headline: d.title || 'Publication',
+        text: textParts.join('<br>')
+      };
+      e.start_date = { year };
+      e.group = 'Publication';
+      timeline_events.push(e);
+    });
+  }
+
+  res.json(timeline_events);
+});
 
 module.exports = router;
