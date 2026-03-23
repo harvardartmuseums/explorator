@@ -16,7 +16,7 @@
 	<div id="loader">
 		Fetching some objects just for you <img src="/images/ajax-loader.gif" height="25">
 	</div>
-	<div id="objects" class="container-fluid p-0"></div>
+	<div id="objects" class="container-fluid p-0 mt-4"></div>
 </div>
 
 <footer class="page-footer grey darken-1 font-small p-3">
@@ -30,24 +30,23 @@
 	\{{#records}}	
 		<li>
 		<div data-object-id="\{{id}}">
-			<p>
-				<h5><a href="\{{id}}">\{{title}}</a></h5>
-
-				<div class="pb-4">
-                    \{{#if primaryimageurl}}
-                        <a href="\{{id}}"><img src="\{{primaryimageurl}}/full/!150,150/0/default.jpg"></a>  
-                    \{{/if}}
-
+			<div class="d-flex pb-4">
+                \{{#if primaryimageurl}}
+                    <div class="mr-3">
+                        <a href="\{{id}}"><img src="\{{primaryimageurl}}/full/150,/0/default.jpg"></a>
+                    </div>
+                \{{/if}}
+				<div>
+					<h5><a href="\{{id}}">\{{title}}</a></h5>
 					\{{#if culture}}
 						Culture: \{{culture}}</br>
 					\{{/if}}
-
 					\{{#if dated}}
 						Dates: \{{dated}}</br>
 					\{{/if}}
+					Object number: \{{objectnumber}}</br>
 				</div>
-			</p>
-			{{!-- <p>\{{objectcount}} objects are associated with \{{displayname}}. </p> --}}
+			</div>
 			<hr>
 		</div>
 		</li>
