@@ -21,7 +21,7 @@
         {{/if}}
         {{#if object.dated}}
         <dt class="col-sm-3">Date</dt>
-        <dd class="col-sm-9">{{object.dated}}</dd>
+        <dd class="col-sm-9">{{object.dated}}<span id="object-age"></span></dd>
         {{/if}}
         {{#if object.period}}
         <dt class="col-sm-3">Period</dt>
@@ -57,12 +57,16 @@
         {{/if}}
         {{#if object.accessionyear}}
         <dt class="col-sm-3">Accession Year</dt>
-        <dd class="col-sm-9">{{object.accessionyear}}</dd>
+        <dd class="col-sm-9">
+            {{object.accessionyear}}
+            <span id="acquisition-gap"></span>
+        </dd>
         {{/if}}
     </dl>
 
     {{#if object.people}}
     <div class="pb-3">
+    <h3>People</h3>
     {{#object.people}}
         <p>{{role}}: <a href="/people/{{personid}}" target="_blank">{{displayname}}</a></p>
     {{/object.people}}
@@ -154,6 +158,61 @@
 	const graphContainer = document.getElementById('activity-graph');
     const dataContainer  = document.getElementById('activity-day-data');
 	makeActivityGraph({{object.id}}, graphContainer, dataContainer);
+</script>
+
+<script>
+(function() {
+    const accessionYear = {{#if object.accessionyear}}{{object.accessionyear}}{{else}}null{{/if}};
+    const beginDate     = {{#if object.datebegin}}{{object.datebegin}}{{else}}null{{/if}};
+    const endDate       = {{#if object.dateend}}{{object.dateend}}{{else}}null{{/if}};
+    const currentYear   = new Date().getFullYear();
+
+    // --- Object age ---
+    const ageEl = document.getElementById('object-age');
+    if (ageEl && (beginDate || endDate)) {
+        if (beginDate && endDate && beginDate !== endDate) {
+            const mid = Math.round((beginDate + endDate) / 2);
+            const age = currentYear - mid;
+            const spread = Math.abs(endDate - beginDate);
+            const qualifier = spread > 100 ? 'roughly ' : 'approximately ';
+            if (age > 0) {
+                ageEl.textContent = ` — ${qualifier}${age} years old`;
+            }
+        } else {
+            const createdYear = beginDate || endDate;
+            const age = currentYear - createdYear;
+            if (age > 0) {
+                ageEl.textContent = ` — ${age} year${age !== 1 ? 's' : ''} old`;
+            } else if (age === 0) {
+                ageEl.textContent = ` — created this year`;
+            }
+        }
+    }
+
+    // --- Acquisition gap ---
+    const gapEl = document.getElementById('acquisition-gap');
+    if (!gapEl || !accessionYear || (!beginDate && !endDate)) return;
+
+    if (beginDate && endDate && beginDate !== endDate) {
+        // It's a date range — use the midpoint and be fuzzy
+        const mid = Math.round((beginDate + endDate) / 2);
+        const gap = accessionYear - mid;
+        if (gap > 0) {
+            const spread = Math.abs(endDate - beginDate);
+            let qualifier = spread > 100 ? 'roughly ' : 'approximately ';
+            gapEl.textContent = ` — The museum acquired this object ${qualifier}${gap} years after it was created.`;
+        }
+    } else {
+        // Single date — be precise
+        const createdYear = beginDate || endDate;
+        const gap = accessionYear - createdYear;
+        if (gap > 0) {
+            gapEl.textContent = ` — The museum acquired this object ${gap} year${gap !== 1 ? 's' : ''} after it was created.`;
+        } else if (gap === 0) {
+            gapEl.textContent = ` — The museum acquired this object in the same year it was created.`;
+        }
+    }
+})();
 </script>
 
 <script>
