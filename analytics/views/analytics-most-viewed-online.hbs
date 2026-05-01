@@ -44,7 +44,7 @@
 </script>			
 <script id="object-details-template" type="text/template">	
 	\{{#if primaryimageurl}}
-		<img class="img-fluid" src="\{{images.[0].iiifbaseuri}}/full/400,/0/default.jpg">
+		<img class="img-fluid" src="\{{images.[0].baseimageurl}}/full/400,/0/default.jpg">
 	\{{/if}}
 	<p>Title: \{{title}}</p>
 	\{{#people}}
@@ -112,7 +112,7 @@
 				"by_year": {
 					"date_histogram": {
 						"field": "date",
-						"interval": "year",
+						"calendar_interval": "year",
 						"format": "yyy",
 						"min_doc_count": 0,
 						"extended_bounds": {

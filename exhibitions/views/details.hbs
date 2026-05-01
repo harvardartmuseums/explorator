@@ -34,7 +34,7 @@
     <div class="pb-4">
     {{#exhibition.images}}
         <div class="media pe-4">
-            <img src="{{iiifbaseuri}}/full/!200,200/0/default.jpg">
+            <img src="{{baseimageurl}}/full/!200,200/0/default.jpg">
             <div class="media-body p-4">
                 {{caption}}
             </div>
@@ -67,7 +67,7 @@
         {{#if exhibition.objects}}
             <p>Here's a sample.</p>
             {{#exhibition.objects}}
-                <a href="{{url}}"><img class="img-thumbnail float-start" src="{{images.[0].iiifbaseuri}}/full/,150/0/default.jpg"></a>
+                <a href="{{url}}"><img class="img-thumbnail float-start" src="{{images.[0].baseimageurl}}/full/,150/0/default.jpg"></a>
             {{/exhibition.objects}}
         {{/if}}
     </div>

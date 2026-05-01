@@ -139,7 +139,7 @@ async function getObjectActivityByYear(objectid) {
           "by_year": {
             "date_histogram": {
               "field": "date",
-              "interval": "year",
+              "calendar_interval": "year",
               "format": "yyy",
               "min_doc_count": 0,
               "extended_bounds": {

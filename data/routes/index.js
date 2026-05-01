@@ -45,7 +45,7 @@ router.get('/object/:id/activities/by/month', async function(req, res, next) {
                 by_month: {
                     date_histogram: {
                         field: "date",
-                        interval: "month",
+                        calendar_interval: "month",
                         format: "yyy-MM",
                         min_doc_count: 0,
                         extended_bounds: {
