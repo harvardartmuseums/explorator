@@ -20,13 +20,13 @@ async function build(id) {
     // get the openai description
     if (artwork.images.length > 0) {
         let criteria = {
-            q: 'source:"Azure OpenAI Service" OR "Anthropic"',
+            q: 'source:"OpenAI" OR "Anthropic"',
             fields: 'body,source,model',
             image: artwork.images[0].imageid
         };
         let annotations = await api.Annotations.search(criteria);
         if (annotations.info.totalrecords > 0) {
-            let openai = _.filter(annotations.records, {source: "Azure OpenAI Service"})
+            let openai = _.filter(annotations.records, {source: "OpenAI"})
             if (openai.length > 0) {
                 artwork.openai = openai[0].body;
             }

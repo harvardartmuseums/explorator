@@ -30,7 +30,7 @@ router.get('/browse/data', async function(req, res, next) {
     image: imageIdList,
     size: 100,
     fields: 'body,imageid,source,model',
-    q: 'source: ("Azure OpenAI Service" OR "Anthropic" OR "Amazon" OR "Meta")'
+    q: 'source: ("OpenAI" OR "Anthropic" OR "Amazon" OR "Meta")'
   };
   let annotations = await HAM.Annotations.search(criteria);
 
@@ -39,7 +39,7 @@ router.get('/browse/data', async function(req, res, next) {
     if (object) {
       let image = _.find(object.images, {imageid: a.imageid});
       if (image) {
-        if (a.source === "Azure OpenAI Service") {
+        if (a.source === "OpenAI") {
           image.openaidescription = a;
         } else if (a.source === "Anthropic") {
           image.anthropicaidescription = a;

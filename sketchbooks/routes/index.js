@@ -123,7 +123,7 @@ router.get('/archives/scrapbooks/:id/page/:imageid', async function(req, res, ne
 
   data.descriptions = await HAM_OWNER.Annotations.search({
       image: req.params.imageid, 
-      q: 'source:"Anthropic" OR "Azure OpenAI Service" OR "Amazon" OR "Meta" OR "Google Gemini" OR "Mistral" OR "Qwen"'});
+      q: 'source:"Anthropic" OR "OpenAI" OR "Amazon" OR "Meta" OR "Google Gemini" OR "Mistral" OR "Qwen"'});
 
   res.render('archives-scrapbooks-details-page', {layout: '../../core/views/layout.hbs', title: 'Archives Scrapbooks | Book Explorer | Explorator | Harvard Art Museums', data: data });
 });
