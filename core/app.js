@@ -16,6 +16,7 @@ var exhibitions = require('../exhibitions/app');
 var magic = require('../magic/app');
 var buildings = require('../buildings/app');
 var objects = require('../objects/app');
+var lookup = require('../lookup/app');
 
 var app = express();
 
@@ -43,6 +44,7 @@ app.use('/exhibitions', exhibitions);
 app.use('/magic', magic);
 app.use('/buildings', buildings);
 app.use('/objects', objects);
+app.use('/lookup', lookup);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

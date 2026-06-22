@@ -1,0 +1,157 @@
+<header class="jumbotron grey lighten-4">
+    <h1>Quick Lookup</h1>
+    <p class="lead">Look up any record in the Harvard Art Museums API by endpoint and ID.</p>
+</header>
+
+<section x-data="lookupApp()" class="container-fluid p-4">
+    <div class="row">
+        <div class="col-md-10">
+            <form @submit.prevent="doLookup()" class="form-inline mb-4">
+                <select x-model="endpoint" @change="updateFields()" class="form-control mr-2 mb-2">
+                    <option value="">-- Endpoint --</option>
+                    <template x-for="ep in endpoints" :key="ep">
+                        <option :value="ep" x-text="ep"></option>
+                    </template>
+                </select>
+
+                <select x-model="field" class="form-control mr-2 mb-2" :disabled="!endpoint">
+                    <option value="">-- Field --</option>
+                    <template x-for="f in availableFields" :key="f">
+                        <option :value="f" x-text="f"></option>
+                    </template>
+                </select>
+
+                <input type="text" x-model="idValue" placeholder="Enter ID value"
+                       class="form-control mr-2 mb-2" :disabled="!field"
+                       @keydown.enter.prevent="doLookup()">
+
+                <button type="submit" class="btn btn-primary mb-2"
+                        :disabled="!endpoint || !field || !idValue || loading">
+                    Lookup
+                </button>
+            </form>
+
+            <div x-show="loading" class="mb-3">
+                <span class="spinner-border spinner-border-sm" role="status"></span> Fetching...
+            </div>
+
+            <div x-show="error" class="alert alert-danger" x-text="error"></div>
+
+            <div x-show="resultInfo" class="mb-2">
+                <span class="badge badge-info" x-text="resultInfo"></span>
+            </div>
+
+            <pre x-show="result" class="bg-light p-3 border" style="max-height: 70vh; overflow: auto;"><code x-text="result"></code></pre>
+        </div>
+    </div>
+</section>
+
+<footer class="page-footer grey darken-1 font-small p-3">
+    <div class="container-responsive text-left">
+        Another R&amp;D project from the department of Digital Infrastructure and Emerging Technology at <a href="https://hvrd.art">Harvard Art Museums</a>
+    </div>
+</footer>
+
+<script>
+function lookupApp() {
+    const endpointFields = {
+        objects: ['objectid', 'personid', 'exhibitionid', 'publicationid', 'imageid', 'groupid', 'placeid', 'centuryid', 'cultureid', 'periodid', 'techniqueid', 'supportid', 'worktypeid', 'videoid', 'audioid'],
+        images: ['imageid'],
+        people: ['personid'],
+        exhibitions: ['exhibitionid', 'personid', 'imageid', 'objectid', 'publicationid', 'videoid'],
+        galleries: ['galleryid'],
+        publications: ['publicationid', 'personid'],
+        activities: ['objectid'],
+        annotations: ['imageid'],
+        audio: ['audioid'],
+        videos: ['videoid'],
+        centuries: ['id'],
+        classifications: ['classificationid'],
+        cultures: ['id'],
+        groups: ['groupid'],
+        mediums: ['mediumid', 'parentmediumid'],
+        periods: ['periodid'],
+        places: ['placeid', 'parentplaceid'],
+        supports: ['supportid', 'parentsupportid'],
+        techniques: ['techniqueid'],
+        worktypes: ['worktypeid']
+    };
+
+    const primaryIdFields = {
+        objects: 'objectid',
+        images: 'imageid',
+        people: 'personid',
+        exhibitions: 'exhibitionid',
+        galleries: 'galleryid',
+        publications: 'publicationid',
+        audio: 'audioid',
+        videos: 'videoid',
+        centuries: 'id',
+        classifications: 'classificationid',
+        cultures: 'id',
+        groups: 'groupid',
+        mediums: 'mediumid',
+        periods: 'periodid',
+        places: 'placeid',
+        supports: 'supportid',
+        techniques: 'techniqueid',
+        worktypes: 'worktypeid'
+    };
+
+    return {
+        endpoint: '',
+        field: '',
+        idValue: '',
+        result: '',
+        resultInfo: '',
+        error: '',
+        loading: false,
+        endpoints: Object.keys(endpointFields),
+        availableFields: [],
+
+        updateFields() {
+            this.availableFields = endpointFields[this.endpoint] || [];
+            this.field = this.availableFields.length === 1 ? this.availableFields[0] : '';
+            this.result = '';
+            this.resultInfo = '';
+            this.error = '';
+        },
+
+        async doLookup() {
+            if (!this.endpoint || !this.field || !this.idValue) return;
+
+            this.loading = true;
+            this.result = '';
+            this.resultInfo = '';
+            this.error = '';
+
+            try {
+                let url;
+                if (this.field === primaryIdFields[this.endpoint]) {
+                    url = `/data/${this.endpoint}/${this.idValue}`;
+                } else {
+                    url = `/data/${this.endpoint}?${this.field}=${encodeURIComponent(this.idValue)}`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                if (data.info && data.info.totalrecords !== undefined) {
+                    this.resultInfo = `${data.info.totalrecords} record(s) found`;
+                } else {
+                    this.resultInfo = 'Record found';
+                }
+
+                this.result = JSON.stringify(data, null, 2);
+            } catch (e) {
+                this.error = `Lookup failed: ${e.message}`;
+            } finally {
+                this.loading = false;
+            }
+        }
+    };
+}
+</script>
