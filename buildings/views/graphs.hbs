@@ -14,7 +14,7 @@
 
 <section x-data="dataviz" class="m-2">            
     <div x-show="isLoading" x-text="statusMessage" class="h2"></div>
-	<div x-show="!isLoading">
+	<div x-show="!isLoading" id="filterBar">
 		<label>Show me a </label>
 		<select x-model="layoutType" x-on:change="layout">
 			<option value="floor plan">floor plan</option>
@@ -22,7 +22,12 @@
 			<option value="tree">tree</option>
 		</select>
 		view of 
-		<label>art classified as </label>
+		<select x-model="filterSelection.ownershipStatus" x-on:change="filter">
+			<option value="">all art</option>
+			<option value="loan">loaned art</option>
+			<option value="permanent collection">permanent collection</option>
+		</select>
+		<label>classified as </label>
 		<select x-model="filterSelection.classification" x-on:change="filter">
 			<option value="">anything</option>
 			<template x-for="classification in filters.classifications" >
@@ -41,6 +46,7 @@
 			<option value="730">2 years</option>
 		</select>
 	</div>
+	<div x-show="!isLoading" id="objectCount" class="text-muted" x-text="objectCountMessage"></div>
 	<div class="d-flex">
     	<div x-show="!isLoading" id="museum"></div>
 		<div x-show="!isLoading" id="info" class="p-2" style="max-width:250px"></div>
@@ -59,6 +65,7 @@
         Alpine.data('dataviz', () => ({    
             museum: {
 				"name": "Harvard Art Museums", 
+				"totalobjectssonview": 0,
 				"children": [
 					{"name": "Lower Level", "floor": 0},
 					{"name": "Level 1", "floor": 1},
@@ -68,10 +75,11 @@
 					{"name": "Level 5", "floor": 5}
 				]},
 			filters: {"classifications": []},
-			filterSelection: {"classification": "", "age": 9999999},
+			filterSelection: {ownershipStatus: "", "classification": "", "age": 9999999},
             isLoading: false,
             statusMessage: 'Loading...',
             layoutType: '',
+			objectCountMessage: '',
 			margin: {top: 50, right: 120, bottom: 50, left: 160},
 			width: 0,
 			height: 0,
@@ -100,8 +108,8 @@
 					level.svg = await d3.xml(`/buildings/images/floor-${level.floor}.svg`);
 				}
 
-				this.museum.totalrecordsonview = await this.getObjectCount();
-				d3.select("#numofobjectsonview").text(this.museum.totalrecordsonview);
+				this.museum.totalobjectssonview = await this.getObjectCount();
+				d3.select("#numofobjectsonview").text(this.museum.totalobjectssonview);
 
                 this.isLoading = false;
 
@@ -156,24 +164,37 @@
 
             async prepareRoom(d) {
                 let baseURL = '/data/objects';
-                let urlParameters = new URLSearchParams({
-                                            size: 100,
-                                            gallery: d.gallerynumber,  
-                                            sort: 'gallery.gallerynumber', 
-                                            fields: 'objectnumber,objectid,title,dated,url,primaryimageurl,classification,classificationid,gallery,rank,totalpageviews'
-                                        });				
+                let fields = 'objectnumber,objectid,title,dated,url,primaryimageurl,classification,classificationid,gallery,rank,totalpageviews,creditline';
+                let page = 1;
+                let totalPages = 1;
+                d.children = [];
 
-                let art = await fetch(`${baseURL}?${urlParameters.toString()}`);
-                    art = await art.json();
-                d.objectcount = art.info.totalrecords;	
-                d.children = art.records;
+                while (page <= totalPages) {
+                    let urlParameters = new URLSearchParams({
+                                                size: 100,
+                                                page: page,
+                                                gallery: d.gallerynumber,
+                                                sort: 'gallery.gallerynumber',
+                                                fields: fields
+                                            });
 
-                for (var i = art.records.length - 1; i >= 0; i--) {
-                    dt1 = new Date(art.records[i].gallery.begindate);
+                    let art = await fetch(`${baseURL}?${urlParameters.toString()}`);
+                        art = await art.json();
+                    d.objectcount = art.info.totalrecords;
+                    totalPages = art.info.pages;
+
+                    d.children = d.children.concat(art.records);
+                    page++;
+                }
+
+                for (var i = d.children.length - 1; i >= 0; i--) {
+                    dt1 = new Date(d.children[i].gallery.begindate);
                     dt2 = new Date();
                     var age = Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate()) ) /(1000 * 60 * 60 * 24));
-                    art.records[i].gallery.age = age;
-					art.records[i].name = art.records[i].title;
+                    d.children[i].gallery.age = age;
+					d.children[i].name = d.children[i].title;
+
+					d.children[i].ownershipStatus = d.children[i].objectnumber.startsWith("TL") ? "loan" : "permanent collection";
                 }
 
                 if (d.id) {
@@ -185,7 +206,10 @@
 				d3.selectAll("#museum circle.object, #museum text.object")
 					.style("opacity", 1.0)
 					.filter(this.isNotInSelection.bind(this))
-						.style("opacity", 0.1);					
+						.style("opacity", 0.1);
+				let all = d3.selectAll("#museum circle.object").filter(d => d.data.objectid);
+				let visible = all.filter(d => !this.isNotInSelection(d)).size();
+				this.objectCountMessage = `Showing ${visible} of ${this.museum.totalobjectssonview} objects`;
 			},
 
 			async layout(e) {
@@ -220,6 +244,11 @@
 							output = true;
 						}
 					}
+					if (this.filterSelection.ownershipStatus !== "") {
+						if (record.data.ownershipStatus != this.filterSelection.ownershipStatus) {
+							output = true;
+						}
+					}
 				}
 
 				return output;
@@ -241,6 +270,12 @@
 				
 				let f3 = await d3.xml("/buildings/images/floor-3.svg");
 				populateFloor(f3, node.children[3]);
+				
+				let f4 = await d3.xml("/buildings/images/floor-4.svg");
+				populateFloor(f4, node.children[4]);
+				
+				let f0 = await d3.xml("/buildings/images/floor-0.svg");
+				populateFloor(f0, node.children[0]);
 
 				function populateFloor(map, data) {
 					var floor = document.getElementById('museum')
@@ -488,22 +523,29 @@
 					.insert("div", ":first-child")
 					.attr("class", "data-block");
 
-		var title = info.append("div");
-		var details = info.append("div");
-		
-		var t = object.title;
-		if (object.dated) t += ", " + object.dated;
-		
-		title.append("a")
-			.attr("href", object.url)
-			.attr("target", "_blank")
-			.html(t);
-
-		details.text(`${object.classification}; On view for ${object.gallery.age} days in room ${object.gallery.gallerynumber}`);
-		
 		if (object.primaryimageurl) {
 			info.append("img")
 				.attr("src", object.primaryimageurl + "/full/100,/0/default.jpg");
-		}					
+		}
+
+		info.append("div")
+			.append("a")
+			.attr("href", object.url)
+			.attr("target", "_blank")
+			.text(object.title);
+
+		if (object.dated) {
+			info.append("div").text(object.dated);
+		}
+
+		info.append("div").text(object.classification);
+		info.append("div").text(`On view for ${object.gallery.age} days in room ${object.gallery.gallerynumber}`);
+		if (object.ownershipStatus == 'loan') {
+			info.append("div").html(`This is on <mark>loan</mark> from ${object.creditline}.`);
+		} else {
+			info.append("div").text("This part of the permanent collection.");
+		}
+
+		info.append("hr");
 	}					
 </script>
