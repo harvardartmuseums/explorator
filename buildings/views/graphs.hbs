@@ -7,6 +7,13 @@
 <script src="https://cdn.jsdelivr.net/npm/d3-time-format@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
 
+<style>
+	#filterBar select option:disabled {
+		color: #bbb;
+		font-style: italic;
+	}
+</style>
+
 <header class="jumbotron grey lighten-4">
     <h1>Building Explorer</h1>
     <p class="lead">Stay awhile. Stay forever.</p>
@@ -23,27 +30,22 @@
 		</select>
 		view of 
 		<select x-model="filterSelection.ownershipStatus" x-on:change="filter">
-			<option value="">all art</option>
-			<option value="loan">loaned art</option>
-			<option value="permanent collection">permanent collection</option>
+			<template x-for="opt in filters.ownershipStatuses">
+				<option :value="opt.value" :disabled="opt.disabled" x-text="opt.label"></option>
+			</template>
 		</select>
 		<label>classified as </label>
 		<select x-model="filterSelection.classification" x-on:change="filter">
 			<option value="">anything</option>
 			<template x-for="classification in filters.classifications" >
-				<option :value="classification.name" :selected="classification.name === filterSelection.classification" x-text="`${classification.name} (${classification.count})`"></option>
+				<option :value="classification.name" :disabled="classification.disabled" :selected="classification.name === filterSelection.classification" :style="`color: ${colors(classification.name)}`" x-text="`● ${classification.name} (${classification.count})`"></option>
     		</template>
 		</select>
 		<label>installed during the past</label>
 		<select x-model="filterSelection.age" x-on:change="filter">
-			<option value="9999999">anytime</option>
-			<option value="5">5 days</option>
-			<option value="30">30 days</option>
-			<option value="60">60 days</option>
-			<option value="90">90 days</option>
-			<option value="180">6 months</option>
-			<option value="365">1 year</option>
-			<option value="730">2 years</option>
+			<template x-for="opt in filters.ages">
+				<option :value="opt.value" :disabled="opt.disabled" x-text="opt.label"></option>
+			</template>
 		</select>
 	</div>
 	<div x-show="!isLoading" id="objectCount" class="text-muted" x-text="objectCountMessage"></div>
@@ -74,7 +76,43 @@
 					{"name": "Level 4", "floor": 4},
 					{"name": "Level 5", "floor": 5}
 				]},
-			filters: {"classifications": []},
+			filters: {
+				classifications: [],
+				ownershipStatuses: [
+					{value: "", label: "all art", disabled: false},
+					{value: "loan", label: "loaned art", disabled: false},
+					{value: "permanent collection", label: "permanent collection", disabled: false}
+				],
+				ages: [
+					{value: "9999999", label: "anytime", disabled: false},
+					{value: "5", label: "5 days", disabled: false},
+					{value: "30", label: "30 days", disabled: false},
+					{value: "60", label: "60 days", disabled: false},
+					{value: "90", label: "90 days", disabled: false},
+					{value: "180", label: "6 months", disabled: false},
+					{value: "365", label: "1 year", disabled: false},
+					{value: "730", label: "2 years", disabled: false},
+					{value: "1825", label: "5 years", disabled: false}
+				]
+			},
+			colors: d3.scaleOrdinal([
+				"#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+				"#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+				"#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
+				"#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5",
+				"#393b79", "#5254a3", "#6b6ecf", "#9c9ede", "#637939",
+				"#8ca252", "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39",
+				"#e7ba52", "#e7cb94", "#843c39", "#ad494a", "#d6616b",
+				"#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6",
+				"#3182bd", "#6baed6", "#9ecae1", "#c6dbef", "#e6550d",
+				"#fd8d3c", "#fdae6b", "#fdd0a2", "#31a354", "#74c476",
+				"#a1d99b", "#c7e9c0", "#756bb1", "#9e9ac8", "#bcbddc",
+				"#dadaeb", "#636363", "#969696", "#bdbdbd", "#d9d9d9",
+				"#b33dc6", "#27aeef", "#ef5675", "#f9c80e", "#ea7317",
+				"#0f4c5c", "#5f0f40", "#9a031e", "#fb8b24", "#e36414",
+				"#0d3b66", "#faf0ca", "#f4d35e", "#ee964b", "#f95738"
+			]),
+			allObjects: [],
 			filterSelection: {ownershipStatus: "", "classification": "", "age": 9999999},
             isLoading: false,
             statusMessage: 'Loading...',
@@ -108,12 +146,22 @@
 					level.svg = await d3.xml(`/buildings/images/floor-${level.floor}.svg`);
 				}
 
+				this.allObjects = [];
+				for (let level of this.museum.children) {
+					for (let room of (level.children || [])) {
+						for (let obj of (room.children || [])) {
+							if (obj.objectid) this.allObjects.push(obj);
+						}
+					}
+				}
+
 				this.museum.totalobjectssonview = await this.getObjectCount();
 				d3.select("#numofobjectsonview").text(this.museum.totalobjectssonview);
 
                 this.isLoading = false;
 
 				this.layout();
+				this.showSummary();
             },
 
 			async getObjectCount() {
@@ -158,7 +206,8 @@
 				let data = await fetch(`${baseURL}?${urlParameters.toString()}`).then(r => r.json());	
 
 				data.aggregations.by_classification.buckets.forEach(d => {
-					this.filters.classifications.push({name: d.key, count: d.doc_count});
+					this.filters.classifications.push({name: d.key, count: d.doc_count, disabled: false});
+					this.colors(d.key);
 				});
 			},
 
@@ -203,13 +252,141 @@
             },
 
 			filter(e) {
+				this.updateAvailableOptions();
+
 				d3.selectAll("#museum circle.object, #museum text.object")
 					.style("opacity", 1.0)
 					.filter(this.isNotInSelection.bind(this))
 						.style("opacity", 0.1);
 				let all = d3.selectAll("#museum circle.object").filter(d => d.data.objectid);
+				let total = this.museum.totalobjectssonview;
 				let visible = all.filter(d => !this.isNotInSelection(d)).size();
-				this.objectCountMessage = `Showing ${visible} of ${this.museum.totalobjectssonview} objects`;
+				this.objectCountMessage = `Showing ${visible} of ${total} objects`;
+				this.updateFilterMessage(total, visible);
+			},
+
+			updateAvailableOptions() {
+				let currentOwnership = this.filterSelection.ownershipStatus;
+				let currentClassification = this.filterSelection.classification;
+				let currentAge = parseInt(this.filterSelection.age);
+
+				this.filters.classifications = this.filters.classifications.map(cls => ({
+					...cls,
+					disabled: cls.name === currentClassification ? false : !this.allObjects.some(obj =>
+						obj.classification === cls.name &&
+						(currentOwnership === "" || obj.ownershipStatus === currentOwnership) &&
+						obj.gallery && obj.gallery.age <= currentAge
+					)
+				}));
+
+				this.filters.ownershipStatuses = this.filters.ownershipStatuses.map(opt => ({
+					...opt,
+					disabled: (opt.value === "" || opt.value === currentOwnership) ? false : !this.allObjects.some(obj =>
+						obj.ownershipStatus === opt.value &&
+						(currentClassification === "" || obj.classification === currentClassification) &&
+						obj.gallery && obj.gallery.age <= currentAge
+					)
+				}));
+
+				this.filters.ages = this.filters.ages.map(opt => ({
+					...opt,
+					disabled: (opt.value === "9999999" || parseInt(opt.value) == currentAge) ? false : !this.allObjects.some(obj =>
+						obj.gallery && obj.gallery.age <= parseInt(opt.value) &&
+						(currentOwnership === "" || obj.ownershipStatus === currentOwnership) &&
+						(currentClassification === "" || obj.classification === currentClassification)
+					)
+				}));
+			},
+
+			updateFilterMessage(total, visible) {
+				d3.select("#info").selectAll(".filter-message").remove();
+
+				let isFiltered = this.filterSelection.age != 9999999 ||
+					this.filterSelection.classification !== "" ||
+					this.filterSelection.ownershipStatus !== "";
+
+				if (!isFiltered) return;
+
+				let messages = [];
+
+				if (this.filterSelection.age != 9999999) {
+					let days = parseInt(this.filterSelection.age);
+					let label = days < 365 ? `${days} days` : `${days / 365} year${days / 365 > 1 ? 's' : ''}`;
+					let changed = total - visible;
+					let changedPct = Math.round((changed / total) * 100);
+					messages.push(`${visible} objects were installed in the past ${label}.`);
+					if (visible > 0) {
+						messages.push(`Roughly ${Math.round((visible / total) * 100)}% of objects in the museum has changed since then.`);
+					} else {
+						messages.push(`Nothing has changed in ${label}.`);
+					}
+				}
+
+				let totalGalleries = new Set(this.allObjects.map(obj => obj.gallery.gallerynumber)).size;
+				let activeGalleries = new Set(
+					this.allObjects
+						.filter(obj => !this.isObjectFiltered(obj))
+						.map(obj => obj.gallery.gallerynumber)
+				).size;
+				let galleryPct = Math.round((activeGalleries / totalGalleries) * 100);
+				messages.push(`About ${activeGalleries} galleries contain these items. That's roughly ${galleryPct}% of galleries.`);
+
+				let info = d3.select("#info")
+					.insert("div", ":first-child")
+					.attr("class", "filter-message alert alert-info");
+				messages.forEach(m => info.append("p").attr("class", "mb-1").text(m));
+			},
+
+			isObjectFiltered(obj) {
+				if (obj.gallery.age > parseInt(this.filterSelection.age)) return true;
+				if (this.filterSelection.classification !== "" && obj.classification !== this.filterSelection.classification) return true;
+				if (this.filterSelection.ownershipStatus !== "" && obj.ownershipStatus !== this.filterSelection.ownershipStatus) return true;
+				return false;
+			},
+
+			showSummary() {
+				let totalGalleries = new Set(this.allObjects.map(obj => obj.gallery.gallerynumber)).size;
+				let totalArtworks = this.allObjects.length;
+				let loanCount = this.allObjects.filter(obj => obj.ownershipStatus === 'loan').length;
+				let pctLoan = Math.round((loanCount / totalArtworks) * 100);
+				let loanGalleries = new Set(this.allObjects.filter(obj => obj.ownershipStatus === 'loan').map(obj => obj.gallery.gallerynumber)).size;
+				let stale = this.allObjects.filter(obj => obj.gallery.age > 3650).length;
+				let pctStale = Math.round((stale / totalArtworks) * 100);
+
+				let newest = this.allObjects.reduce((min, obj) => obj.gallery.age < min.gallery.age ? obj : min, this.allObjects[0]);
+				let newestAge = newest.gallery.age;
+				let newestGalleries = [...new Set(
+					this.allObjects
+						.filter(obj => obj.gallery.age === newestAge)
+						.map(obj => obj.gallery.gallerynumber)
+				)];
+
+				let installDate = new Date();
+				installDate.setDate(installDate.getDate() - newestAge);
+				let dateStr = installDate.toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'});
+
+				let info = d3.select("#info")
+					.append("div")
+					.attr("class", "summary-message alert alert-secondary");
+
+				info.append("p").attr("class", "mb-1").text(`There are ${totalGalleries} galleries.`);
+				info.append("p").attr("class", "mb-1").text(`There are ${totalArtworks} artworks in these galleries.`);
+				info.append("p").attr("class", "mb-1").text(`${loanCount} of these artworks are loans. That's about ${pctLoan}% of the collections on display. They are spread across ${loanGalleries} galleries.`);
+				info.append("p").attr("class", "mb-1").text(`${stale} artworks haven't moved in over 10 years. That's about ${pctStale}% of the collections in the galleries.`);
+
+				let galleryObjects = {};
+				this.allObjects.forEach(obj => {
+					let g = obj.gallery.gallerynumber;
+					if (!galleryObjects[g]) galleryObjects[g] = [];
+					galleryObjects[g].push(obj);
+				});
+				let staticGalleries = Object.entries(galleryObjects).filter(([g, objs]) => {
+					let staleCount = objs.filter(o => o.gallery.age >= 3650).length;
+					return staleCount > objs.length / 2;
+				}).map(([g]) => g);
+				info.append("p").attr("class", "mb-1").text(`${staticGalleries.length} galleries are mostly static (majority of objects haven't moved in 10+ years): ${staticGalleries.join(', ')}.`);
+
+				info.append("p").attr("class", "mb-1").text(`The most recent install was ${dateStr} in ${newestGalleries.length > 1 ? 'galleries' : 'gallery'} ${newestGalleries.join(', ')}.`);
 			},
 
 			async layout(e) {
@@ -257,8 +434,8 @@
 			async floorplanLayout() {
 				var w = this.width,
 				    h = this.height;
-				
-			    let colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+			    let colors = this.colors;
 
 				var node = $.extend(true, {}, this.museum);
 
@@ -330,7 +507,7 @@
 				    node,
 				    root;
 
-			    let colors = d3.scaleOrdinal(d3.schemeCategory10);
+			    let colors = this.colors;
 
 				var pack = d3.pack()
 				    .size([r, r]);
@@ -418,7 +595,7 @@
 				const dx = 10;
 				const dy = width / (root.height + 1);
 
-			    const colors = d3.scaleOrdinal(d3.schemeCategory10);
+			    const colors = this.colors;
 
 				// Create a tree layout.
 				const tree = d3.tree().nodeSize([dx, dy]);
