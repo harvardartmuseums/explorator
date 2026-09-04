@@ -3,6 +3,8 @@ var router = require("express-promise-router")();
 var ham = require('@harvardartmuseums/ham');
 
 let HAM = new ham(process.env.apikey);
+let HAM_STAGING = new ham(process.env.apikey);
+HAM_STAGING.baseurl = 'https://staging.api.harvardartmuseums.org';
 
 var cache = apicache.middleware;
 
@@ -15,15 +17,20 @@ router.get('/:endpoint', cache('12 hours'), async function(req, res, next) {
         aggregations: {}
     };
 
+    let useStaging = false;
+
     for (var param in req.query) {
         if (param == 'aggregation' || param == 'aggregations') {
             qs.aggregations = JSON.parse(req.query[param]);
+        } else if (param == 'env' && req.query[param] == 'staging') {
+            useStaging = true;
         } else {
             qs.parameters[param] = req.query[param];
         }
     }
 
-    let results = await HAM.search(req.params.endpoint, qs.parameters, qs.aggregations);
+    let client = useStaging ? HAM_STAGING : HAM;
+    let results = await client.search(req.params.endpoint, qs.parameters, qs.aggregations);
     res.json(results);
 });
 
