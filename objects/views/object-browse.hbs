@@ -1,42 +1,114 @@
+<style>
+	.highlight-col em {
+		font-style: normal;
+		font-weight: bold;
+		background-color: #ffe082;
+		padding: 1px 3px;
+		border-radius: 3px;
+	}
+	.highlight-col small {
+		display: block;
+		margin-bottom: 6px;
+	}
+</style>
+
 <header class="jumbotron grey lighten-4">
 	<h1>Object Explorer</h1>
 	<p class="lead">Search for objects in the Harvard Art Museums collections</p>
 </header>
 
 <div class="container-fluid p-4">
-	<div class="pb-2">
-		<input type="text" id="objectname" value=""></input>
-        <label>on view only</label> <input type="checkbox" id="filter-on-view" value=""></input>
-		<button type="button" class="btn btn-primary" id="search-objects-button">Filter</button>
-		<button type="button" class="btn btn-light" id="reset-search-criteria">Clear</button>
-		<span id="info" class="body"></span>
+	<div class="pb-3">
+		<div class="form-row align-items-end">
+			<div class="col-md-4 mb-2">
+				<label for="objectname" class="font-weight-bold">Keyword</label>
+				<input type="text" id="objectname" class="form-control" placeholder="Enter a keyword..." value="">
+			</div>
+			<div class="col-md-2 mb-2">
+				<label for="sort-select" class="font-weight-bold">Sort</label>
+				<select id="sort-select" class="form-control">
+					<option value="">Relevance</option>
+					<option value="rank">Rank</option>
+					<option value="objectid">Object ID</option>
+					<option value="title.exact">Title</option>
+					<option value="datebegin">Date (earliest first)</option>
+					<option value="dateend">Date (latest first)</option>
+					<option value="accessionyear">Accession year</option>
+					<option value="totalpageviews">Page views</option>
+					<option value="random">Random</option>
+				</select>
+			</div>
+			<div class="col-auto mb-2">
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input" id="filter-on-view">
+					<label class="custom-control-label" for="filter-on-view">On view only</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input" id="toggle-debug">
+					<label class="custom-control-label" for="toggle-debug">Debug</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input" id="toggle-highlight">
+					<label class="custom-control-label" for="toggle-highlight">Highlight</label>
+				</div>
+				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input" id="toggle-staging">
+					<label class="custom-control-label" for="toggle-staging">Staging API</label>
+				</div>
+			</div>
+			<div class="col-auto mb-2">
+				<button type="button" class="btn btn-primary" id="search-objects-button">Search</button>
+				<button type="button" class="btn btn-outline-secondary" id="reset-search-criteria">Clear</button>
+				<span id="env-badge" class="ml-2" style="display:none;"><span id="env-badge-text" class="badge badge-pill p-2"></span></span>
+			</div>
+		</div>
 	</div>
+
+	<div id="api-url-display" class="mb-3" style="display:none;">
+		<small class="text-muted font-weight-bold">API request</small>
+		<pre class="bg-light border rounded p-2 mb-0" style="font-size: 0.8rem; word-break: break-all; white-space: pre-wrap;"><code id="api-url-text"></code></pre>
+	</div>
+
+	<div id="debug-panel" class="mb-3" style="display:none;">
+		<small class="text-muted font-weight-bold">Elasticsearch query</small>
+		<pre class="bg-light border rounded p-2 mb-0" style="font-size: 0.75rem; max-height: 300px; overflow: auto;"><code id="debug-content"></code></pre>
+	</div>
+
+	<div id="info-bar" class="d-flex align-items-center mb-3">
+		<span id="info" class="font-weight-bold"></span>
+		<span id="response-time" class="ml-3 text-muted small"></span>
+	</div>
+
 	<div id="paginator"></div>
-		
-	<div id="loader">
+
+	<div id="loader" style="display:none;">
 		Fetching some objects just for you <img src="/images/ajax-loader.gif" height="25">
 	</div>
-	<div id="objects" class="container-fluid p-0 mt-4"></div>
+	<div id="objects" class="container-fluid p-0 mt-2"></div>
 </div>
 
 <footer class="page-footer grey darken-1 font-small p-3">
 	<div class="info-panel">
-		<span id="counter">Enter an object title and click the "Filter" button</span>
+		<span id="counter">Enter a keyword and click "Search"</span>
 	</div>
 </footer>
 
 <script id="object-template" type="text/template">
 	<ul class="list-unstyled">
-	\{{#records}}	
+	\{{#records}}
 		<li>
 		<div data-object-id="\{{id}}">
 			<div class="d-flex pb-4">
                 \{{#if primaryimageurl}}
-                    <div class="mr-3">
+                    <div class="mr-3" style="flex-shrink: 0;">
                         <a href="\{{id}}"><img src="\{{primaryimageurl}}/full/150,/0/default.jpg"></a>
                     </div>
-                \{{/if}}
-				<div>
+				\{{else}}
+					<div class="mr-3" style="flex-shrink: 0;">
+						<a href="\{{id}}"><img src="/images/Image-Unavailable.jpg" alt="No image available" width="150" height="150"></a>
+					</div>
+				\{{/if}}
+				<div class="flex-grow-1">
 					<h5><a href="\{{id}}">\{{title}}</a></h5>
 					\{{#if culture}}
 						Culture: \{{culture}}</br>
@@ -45,16 +117,33 @@
 						Dates: \{{dated}}</br>
 					\{{/if}}
 					Object number: \{{objectnumber}}</br>
+					\{{#if people}}
+						\{{#each people}}
+							\{{#if @first}}Artist: \{{/if}}\{{displayname}}\{{#unless @last}}, \{{/unless}}
+						\{{/each}}</br>
+					\{{/if}}
+					\{{#if explanationHtml}}
+						<details class="mt-2">
+							<summary class="text-muted" style="cursor:pointer; font-size: 0.85rem;">Score explanation</summary>
+							<pre class="bg-light border rounded p-2 mt-1 mb-0" style="font-size: 0.7rem; max-height: 200px; overflow: auto; white-space: pre-wrap;">\{{{explanationHtml}}}</pre>
+						</details>
+					\{{/if}}
 				</div>
+				\{{#if highlightHtml}}
+					<div class="ml-3 p-3 border-left highlight-col" style="flex: 0 0 500px; border-left-width: 3px !important; border-color: #ffc107 !important; background-color: #fff8e1; font-size: 0.85rem; line-height: 1.6;">
+						<small class="text-muted d-block mb-2 font-weight-bold">Highlighted matches</small>
+						\{{{highlightHtml}}}
+					</div>
+				\{{/if}}
 			</div>
 			<hr>
 		</div>
 		</li>
 	\{{/records}}
 	</ul>
-</script>	
+</script>
 <script id="info-template" type="text/template">
-	\{{totalrecords}} objects 
+	\{{totalrecords}} objects
 </script>
 <script id="related-objects-template" type="text/template">
 	<div>
@@ -68,19 +157,41 @@
 </script>
 
 <script>
-    let onviewFilter = '';
+	let onviewFilter = '';
+	let debugMode = false;
+	let highlightMode = false;
+	let stagingMode = false;
 
 	document.addEventListener("DOMContentLoaded", function() {
-		$("#objectname").val(window.location.hash);
+		$("#objectname").val(window.location.hash.replace('#', ''));
 
-        $("#filter-on-view").on("click", function(e) {
-            if (e.target.checked) {
-                onviewFilter = 'any';
-            } else {
-                onviewFilter = '';
-            }
-            fillObjects();
-        });
+		$("#objectname").on("keypress", function(e) {
+			if (e.which === 13) {
+				window.location.hash = $("#objectname").val();
+				fillObjects();
+			}
+		});
+
+		$("#filter-on-view").on("click", function(e) {
+			onviewFilter = e.target.checked ? 'any' : '';
+			fillObjects();
+		});
+
+		$("#toggle-debug").on("click", function(e) {
+			debugMode = e.target.checked;
+			if (!debugMode) $("#debug-panel").hide();
+			fillObjects();
+		});
+
+		$("#toggle-highlight").on("click", function(e) {
+			highlightMode = e.target.checked;
+			fillObjects();
+		});
+
+		$("#toggle-staging").on("click", function(e) {
+			stagingMode = e.target.checked;
+			fillObjects();
+		});
 
 		$("#search-objects-button").on("click", function() {
 			window.location.hash = $("#objectname").val();
@@ -90,6 +201,18 @@
 		$("#reset-search-criteria").on("click", function() {
 			window.location.hash = '';
 			$("#objectname").val('');
+			$("#sort-select").val('');
+			$("#filter-on-view").prop('checked', false);
+			$("#toggle-debug").prop('checked', false);
+			$("#toggle-highlight").prop('checked', false);
+			$("#toggle-staging").prop('checked', false);
+			onviewFilter = '';
+			debugMode = false;
+			highlightMode = false;
+			stagingMode = false;
+			$("#debug-panel").hide();
+			$("#api-url-display").hide();
+			$("#response-time").text('');
 			fillObjects();
 		});
 
@@ -97,23 +220,67 @@
 	});
 
 
+	function formatExplanation(exp, depth) {
+		depth = depth || 0;
+		var indent = '  '.repeat(depth);
+		var text = indent + exp.value.toFixed(4) + ' - ' + exp.description + '\n';
+		if (exp.details && exp.details.length) {
+			exp.details.forEach(function(d) {
+				text += formatExplanation(d, depth + 1);
+			});
+		}
+		return text;
+	}
+
 	function fillObjects() {
 		var keyword = $("#objectname").val() || '';
+		var sortValue = $("#sort-select").val();
 		var urlBase = '/data/objects';
 		var urlParameters = {
 			keyword: keyword,
             q: "accesslevel:1",
-			sort: "objectid",
 			gallery: onviewFilter
 		};
+
+		if (sortValue) {
+			urlParameters.sort = sortValue;
+		}
+
+		if (debugMode) {
+			urlParameters.debug = 1;
+		}
+
+		if (highlightMode) {
+			urlParameters.highlight = 1;
+		}
+
+		if (stagingMode) {
+			urlParameters.env = 'staging';
+		}
+
 		var url = urlBase + "?" + $.param(urlParameters);
+
+		if (stagingMode) {
+			$("#env-badge").show();
+			$("#env-badge-text").text("STAGING").removeClass("badge-success").addClass("badge-warning");
+		} else {
+			$("#env-badge").show();
+			$("#env-badge-text").text("PRODUCTION").removeClass("badge-warning").addClass("badge-success");
+		}
+
+		if (debugMode) {
+			$("#api-url-display").show();
+			$("#api-url-text").text(decodeURIComponent(url));
+		} else {
+			$("#api-url-display").hide();
+		}
 
 		let objectsSource = $('#object-template').html();
 		let objectsTemplate = Handlebars.compile(objectsSource);
-		
+
 		let infoSource = $('#info-template').html();
 		let infoTemplate = Handlebars.compile(infoSource);
-		
+
 		$("#paginator").pagination({
 			dataSource: url,
 			locator: "records",
@@ -123,6 +290,17 @@
 				pageSize: "size"
 			},
 			totalNumberLocator: function(response) {
+				if (response.info.responsetime) {
+					$("#response-time").text(response.info.responsetime);
+				}
+
+				if (debugMode && response.info.query) {
+					$("#debug-panel").show();
+					$("#debug-content").text(JSON.stringify(response.info.query, null, 2));
+				} else {
+					$("#debug-panel").hide();
+				}
+
 				return response.info.totalrecords;
 			},
 			beforePaging: function() {
@@ -130,16 +308,37 @@
 				$("#loader").show();
 			},
 			callback: function(data, pagination) {
+				data.forEach(function(record) {
+					if (debugMode && record._explanation) {
+						record.explanationHtml = formatExplanation(record._explanation);
+					}
+
+					if (highlightMode && record._highlight) {
+						var parts = [];
+						for (var field in record._highlight) {
+							var snippets = record._highlight[field];
+							if (Array.isArray(snippets)) {
+								parts.push('<small><strong>' + field + ':</strong> ' + snippets.join(' ... ') + '</small>');
+							} else if (typeof snippets === 'string') {
+								parts.push('<small><strong>' + field + ':</strong> ' + snippets + '</small>');
+							}
+						}
+						if (parts.length) {
+							record.highlightHtml = parts.join('<br>');
+						}
+					}
+				});
+
 				let info;
-				
+
 				info = infoTemplate({totalrecords: pagination.totalNumber});
 				$('#info').html(info);
 
 				info = objectsTemplate({records: data});
 				$('#objects').html(info);
-				
+
 				$("#loader").hide();
 			}
 		})
-	}			
+	}
 </script>
