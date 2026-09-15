@@ -52,6 +52,10 @@
 					<label class="custom-control-label" for="toggle-highlight">Highlight</label>
 				</div>
 				<div class="custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input" id="toggle-match-any">
+					<label class="custom-control-label" for="toggle-match-any">Match any</label>
+				</div>
+				<div class="custom-control custom-checkbox">
 					<input type="checkbox" class="custom-control-input" id="toggle-staging">
 					<label class="custom-control-label" for="toggle-staging">Staging API</label>
 				</div>
@@ -160,6 +164,7 @@
 	let onviewFilter = '';
 	let debugMode = false;
 	let highlightMode = false;
+	let matchAnyMode = false;
 	let stagingMode = false;
 
 	document.addEventListener("DOMContentLoaded", function() {
@@ -188,6 +193,11 @@
 			fillObjects();
 		});
 
+		$("#toggle-match-any").on("click", function(e) {
+			matchAnyMode = e.target.checked;
+			fillObjects();
+		});
+
 		$("#toggle-staging").on("click", function(e) {
 			stagingMode = e.target.checked;
 			fillObjects();
@@ -205,10 +215,12 @@
 			$("#filter-on-view").prop('checked', false);
 			$("#toggle-debug").prop('checked', false);
 			$("#toggle-highlight").prop('checked', false);
+			$("#toggle-match-any").prop('checked', false);
 			$("#toggle-staging").prop('checked', false);
 			onviewFilter = '';
 			debugMode = false;
 			highlightMode = false;
+			matchAnyMode = false;
 			stagingMode = false;
 			$("#debug-panel").hide();
 			$("#api-url-display").hide();
@@ -252,6 +264,10 @@
 
 		if (highlightMode) {
 			urlParameters.highlight = 1;
+		}
+
+		if (matchAnyMode) {
+			urlParameters.match = 'any';
 		}
 
 		if (stagingMode) {
